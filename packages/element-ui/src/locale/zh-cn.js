@@ -616,6 +616,53 @@ const ZhCn = {
                 nodeKey: '每个树节点用来作为唯一标识的属性，整棵树应该是唯一的'
             }
         },
+        fcCodePreview: {
+            name: '代码展示',
+            props: {
+                language: '语言',
+                chartData: '代码内容',
+                dataSource: '数据来源',
+                chartName: '标题',
+                chartDescription: '简介',
+                editable: '可编辑',
+                copyable: '可复制',
+                formattable: '可格式化',
+            },
+            languages: {
+                javascript: 'JavaScript',
+                html: 'HTML',
+                css: 'CSS',
+                json: 'JSON',
+                python: 'Python',
+                java: 'Java',
+                sql: 'SQL',
+                plaintext: '纯文本',
+            }
+        },
+        fcChart: {
+            name: '图表',
+            props: {
+                chartType: '图表类型',
+                chartData: '图表数据',
+                dataSource: '数据来源',
+                chartName: '图表名称',
+                chartDescription: '图表简介',
+                valueFormat: '格式化数值显示',
+                stack: '多列数据时是否堆叠',
+                smooth: '线条是否平滑过渡',
+                showSymbol: '是否显示标记',
+                showLabel: '是否显示数值',
+                showAverageLine: '是否显示平均数辅助线',
+            },
+            chartTypes: {
+                line: '折线图',
+                area: '面积图',
+                bar: '柱状图',
+                horizontalBar: '条形图',
+                pie: '饼图',
+                funnel: '漏斗图',
+            }
+        },
         elImage: {
             name: '图片',
             props: {

@@ -616,6 +616,53 @@ const En = {
                 nodeKey: 'Each tree node is used as an attribute for unique identification, and the entire tree should be unique'
             }
         },
+        fcCodePreview: {
+            name: 'Code Preview',
+            props: {
+                language: 'Language',
+                chartData: 'Code content',
+                dataSource: 'Data source',
+                chartName: 'Title',
+                chartDescription: 'Description',
+                editable: 'Editable',
+                copyable: 'Copyable',
+                formattable: 'Formattable',
+            },
+            languages: {
+                javascript: 'JavaScript',
+                html: 'HTML',
+                css: 'CSS',
+                json: 'JSON',
+                python: 'Python',
+                java: 'Java',
+                sql: 'SQL',
+                plaintext: 'Plain Text',
+            }
+        },
+        fcChart: {
+            name: 'Chart',
+            props: {
+                chartType: 'Chart type',
+                chartData: 'Chart data',
+                dataSource: 'Data source',
+                chartName: 'Chart name',
+                chartDescription: 'Chart description',
+                valueFormat: 'Value format',
+                stack: 'Stack when multiple series',
+                smooth: 'Smooth line',
+                showSymbol: 'Show symbol',
+                showLabel: 'Show label',
+                showAverageLine: 'Show average line',
+            },
+            chartTypes: {
+                line: 'Line',
+                area: 'Area',
+                bar: 'Bar',
+                horizontalBar: 'Horizontal Bar',
+                pie: 'Pie',
+                funnel: 'Funnel',
+            }
+        },
         elImage: {
             name: 'Image',
             props: {

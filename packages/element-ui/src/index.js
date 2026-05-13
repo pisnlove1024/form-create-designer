@@ -28,6 +28,8 @@ import StyleConfig from './components/style/StyleConfig.vue';
 import LanguageInput from './components/language/LanguageInput.vue';
 import ValueInput from './components/ValueInput.vue';
 import formCreate, {designerForm} from './utils/form';
+import FcChart from './components/FcChart.vue';
+import FcCodePreview from './components/FcCodePreview.vue';
 import FcEditor from '@form-create/component-wangeditor';
 import draggable from 'vuedraggable/src/vuedraggable';
 import {
@@ -82,6 +84,8 @@ addComponent('FcTitle', FcTitle);
 addComponent('SignaturePad', SignaturePad);
 addComponent('TableForm', TableForm, TableFormView);
 addComponent('FcTable', Table, TableView);
+addComponent('FcChart', FcChart);
+addComponent('FcCodePreview', FcCodePreview);
 
 const install = function (Vue) {
     Vue.component('FcDesigner', FcDesigner);
