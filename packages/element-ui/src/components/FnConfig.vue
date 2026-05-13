@@ -29,6 +29,36 @@
                                     </el-menu-item>
                                 </template>
                             </el-menu>
+                            <el-divider>{{ t('event.customEvent') }}</el-divider>
+                            <el-menu
+                                :default-active="defActive"
+                                v-model="activeData">
+                                <template v-for="(item, name) in customEvent">
+                                    <el-menu-item :index="name">
+                                        <div class="_fd-fn-list-method" @click.stop="edit(item)">
+                                            <span>function<span>{{ name }}</span></span>
+                                            <span class="_fd-label">{{ t('event.customEventInfo') }}</span>
+                                            <span class="_fd-dot" v-if="item.fn"></span>
+                                            <i class="fc-icon icon-delete _fd-fn-list-del" @click.stop="removeCustomEvent(name)"></i>
+                                        </div>
+                                    </el-menu-item>
+                                </template>
+                            </el-menu>
+                            <div class="_fd-fn-list-add">
+                                <template v-if="cusAdding">
+                                    <el-input
+                                        v-model="cusName"
+                                        size="small"
+                                        :placeholder="t('event.customEventPlaceholder')"
+                                        @keydown.enter="addCustomEvent">
+                                    </el-input>
+                                    <i class="fc-icon icon-add" @click="addCustomEvent"></i>
+                                    <i class="fc-icon icon-delete" @click="cusAdding=false;cusName=''"></i>
+                                </template>
+                                <el-button v-else link type="primary" size="small" @click="cusAdding=true">
+                                    + {{ t('event.addCustomEvent') }}
+                                </el-button>
+                            </div>
                         </el-main>
                     </el-container>
                 </el-aside>
@@ -91,7 +121,9 @@ export default defineComponent({
             activeData: null,
             defActive: 'no',
             event: {},
-            cus: false,
+            customEvent: {},
+            cusAdding: false,
+            cusName: '',
             eventStr: '',
         };
     },
@@ -109,7 +141,7 @@ export default defineComponent({
         eventNum() {
             let num = 0;
             Object.keys(this.modelValue || {}).forEach(k => {
-                if (this.modelValue[k]) {
+                if (k !== '_customEventNames' && this.modelValue[k]) {
                     num++;
                 }
             });
@@ -118,9 +150,16 @@ export default defineComponent({
     },
     watch: {
         visible(v) {
-            this.event = v ? this.loadFN(deepExtend({}, this.modelValue || {})) : {};
-            if (!v) {
+            if (v) {
+                const val = deepExtend({}, this.modelValue || {});
+                this.event = this.loadFN(val);
+                this.customEvent = this.loadCustomFN(val);
+            } else {
+                this.event = {};
+                this.customEvent = {};
                 this.destroy();
+                this.cusAdding = false;
+                this.cusName = '';
             }
         },
     },
@@ -139,13 +178,53 @@ export default defineComponent({
             });
             return val;
         },
-        parseFN(e) {
+        loadCustomFN(e) {
+            const val = {};
+            const names = e._customEventNames || [];
+            names.forEach(name => {
+                const fn = e[name] || '';
+                val[name] = {
+                    item: {name, args: ['data']},
+                    fn
+                };
+            });
+            return val;
+        },
+        addCustomEvent() {
+            const name = (this.cusName || '').trim();
+            if (!name) return;
+            if (this.event[name] || this.customEvent[name]) {
+                return errorMessage(this.t('event.customEventExists'));
+            }
+            this.customEvent[name] = {
+                item: {name, args: ['data']},
+                fn: ''
+            };
+            this.cusName = '';
+            this.cusAdding = false;
+        },
+        removeCustomEvent(name) {
+            if (this.defActive === name) {
+                this.destroy();
+            }
+            delete this.customEvent[name];
+        },
+        parseFN(e, ce) {
             const on = {};
             Object.keys(e).forEach(k => {
                 if (e[k].fn) {
                     on[k] = e[k].fn;
                 }
             });
+            const customNames = Object.keys(ce);
+            if (customNames.length > 0) {
+                on._customEventNames = customNames;
+                customNames.forEach(k => {
+                    if (ce[k].fn) {
+                        on[k] = ce[k].fn;
+                    }
+                });
+            }
             return on;
         },
         edit(data) {
@@ -173,7 +252,7 @@ export default defineComponent({
             if (this.activeData && !this.save()) {
                 return;
             }
-            this.$emit('update:modelValue', this.parseFN(this.event));
+            this.$emit('update:modelValue', this.parseFN(this.event, this.customEvent));
             this.visible = false;
             this.destroy();
         },
@@ -231,12 +310,13 @@ export default defineComponent({
 
 ._fd-fn-list-l > .el-main, ._fd-fn-list-r > .el-main {
     display: flex;
-    flex-direction: row;
+    flex-direction: column;
     flex: 1;
     flex-basis: auto;
     box-sizing: border-box;
     min-width: 0;
     width: 100%;
+    overflow: auto;
 }
 
 ._fd-fn-list-r > .el-main {
@@ -297,6 +377,38 @@ export default defineComponent({
     height: 6px;
     background: #00C050;
     border-radius: 15px;
+}
+
+._fd-fn-list-del {
+    position: absolute;
+    top: 50%;
+    margin-top: -9px;
+    right: 30px;
+    font-size: 18px;
+    color: #F56C6C;
+    cursor: pointer;
+}
+
+._fd-fn-list-add {
+    display: flex;
+    align-items: center;
+    padding: 8px 10px;
+    gap: 5px;
+}
+
+._fd-fn-list-add .fc-icon {
+    font-size: 18px;
+    cursor: pointer;
+    color: #282828;
+}
+
+._fd-fn-list-l .el-divider {
+    margin: 10px 0 0;
+}
+
+._fd-fn-list-l .el-divider__text {
+    font-size: 12px;
+    color: #999;
 }
 
 ._fd-fn-list-method-info > span:first-child, ._fd-fn-list-method > span:first-child {

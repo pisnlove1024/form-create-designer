@@ -117,6 +117,12 @@ export default function form({t}) {
                 ]
             },
             title: t('form.event'),
+        }, {
+            type: 'GlobalDataConfig',
+            field: 'formCreate_globalData',
+            value: {},
+            col: {show: true},
+            title: t('form.globalData'),
         },
     ];
 }

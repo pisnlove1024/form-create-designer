@@ -1079,12 +1079,140 @@ export default defineComponent({
                 ['onReset', 'onSubmit', 'beforeSubmit', 'onCreated', 'onMounted', 'onReload', 'onChange', 'beforeFetch'].forEach(key => {
                     delete options[key];
                 });
-                Object.keys(options._event || {}).forEach(k => {
-                    if (options._event[k]) {
-                        options[k] = options._event[k];
+                const eventData = options._event || {};
+                const customEventNames = eventData._customEventNames || [];
+                delete eventData._customEventNames;
+                const customEventFns = {};
+                const FN_PREFIX = '[[FORM-CREATE-PREFIX-';
+                const FN_SUFFIX = '-FORM-CREATE-SUFFIX]]';
+                const normalizeFnSource = (fn, fallback = '') => {
+                    if (!fn) return fallback;
+                    if (typeof fn === 'function') {
+                        return normalizeFnSource(fn.__json || fn.__origin || fn.toString(), fallback);
+                    }
+                    if (typeof fn !== 'string') return fallback;
+                    let v = fn.trim();
+                    if (v.indexOf(FN_PREFIX) === 0 && v.indexOf(FN_SUFFIX) > 0) {
+                        v = v.replace(FN_PREFIX, '').replace(FN_SUFFIX, '');
+                    }
+                    return v || fallback;
+                };
+                customEventNames.forEach(name => {
+                    if (eventData[name]) {
+                        customEventFns[name] = eventData[name];
+                        delete eventData[name];
                     }
                 });
+                Object.keys(eventData).forEach(k => {
+                    if (eventData[k]) {
+                        options[k] = eventData[k];
+                    }
+                });
+                const originalOnMounted = options.onMounted || '';
+                if (customEventNames.length > 0) {
+                    const stripFnWrapper = (str) => {
+                        return normalizeFnSource(str, 'function(data){}');
+                    };
+                    const fnEntries = customEventNames.map(name => {
+                        const fn = stripFnWrapper(customEventFns[name]);
+                        return `${JSON.stringify(name)}: ${fn}`;
+                    }).join(',\n            ');
+                    const existingMounted = options.onMounted ? stripFnWrapper(options.onMounted) : '';
+                    let mountedBody;
+                    if (existingMounted) {
+                        mountedBody = `function onMounted(api) {\n        api.globalEvent = {\n            ${fnEntries}\n        };\n        (${existingMounted}).call(this, api);\n    }`;
+                    } else {
+                        mountedBody = `function onMounted(api) {\n        api.globalEvent = {\n            ${fnEntries}\n        };\n    }`;
+                    }
+                    options.onMounted = FN_PREFIX + mountedBody + FN_SUFFIX;
+                    options._customEventNames = customEventNames;
+                    options._customEventFns = customEventFns;
+                }
                 delete options._event;
+                const globalDataItems = (options._globalData && options._globalData._items) || [];
+                // Scan rules for effect.globalData bindings (component → data source)
+                const globalDataBindings = {};
+                const scanGlobalDataBindings = (children) => {
+                    children && children.forEach(rule => {
+                        if (typeof rule === 'string') return;
+                        if (rule.type === 'DragTool') {
+                            rule = rule.children && rule.children[0];
+                            if (!rule || typeof rule === 'string') return;
+                        }
+                        if (rule.type === 'DragBox') {
+                            scanGlobalDataBindings(rule.children);
+                            return;
+                        }
+                        if (rule.effect && rule.effect.globalData && rule.field) {
+                            const gd = rule.effect.globalData;
+                            const dataName = typeof gd === 'object' ? gd.name : gd;
+                            const toPath = typeof gd === 'object' ? (gd.to || 'options') : 'options';
+                            if (dataName) {
+                                if (!globalDataBindings[dataName]) globalDataBindings[dataName] = [];
+                                globalDataBindings[dataName].push({field: rule.field, to: toPath});
+                            }
+                        }
+                        if (rule.children) {
+                            scanGlobalDataBindings(rule.children);
+                        }
+                    });
+                };
+                scanGlobalDataBindings(data.dragForm.rule[0].children);
+                if (globalDataItems.length > 0) {
+                    const stripFnWrapperGD = (str) => {
+                        return normalizeFnSource(str);
+                    };
+                    const makeBindingCode = (dataName) => {
+                        const bindings = globalDataBindings[dataName];
+                        if (!bindings || !bindings.length) return '';
+                        return bindings.map(({field, to}) => {
+                            const setPath = to.indexOf('props.') === 0
+                                ? `.props.${to.slice(6)}`
+                                : `.${to}`;
+                            return `        var _rule = api.getRule(${JSON.stringify(field)}); if(_rule) _rule${setPath} = api.globalData[${JSON.stringify(dataName)}];`;
+                        }).join('\n');
+                    };
+                    const globalDataCode = globalDataItems.map(item => {
+                        const bindCode = makeBindingCode(item.name);
+                        if (item.type === 'static') {
+                            const data = item.data || '{}';
+                            let code = `        api.globalData[${JSON.stringify(item.name)}] = ${data};`;
+                            if (bindCode) code += '\n' + bindCode;
+                            return code;
+                        } else {
+                            const fetch = item.fetch || {};
+                            const fetchOption = deepCopy(fetch);
+                            delete fetchOption.parse;
+                            delete fetchOption.onError;
+                            const fetchConfig = designerForm.toJson(fetchOption);
+                            const parseFn = fetch.parse ? stripFnWrapperGD(fetch.parse) : '';
+                            const onError = fetch.onError ? stripFnWrapperGD(fetch.onError) : '';
+                            const dataValue = parseFn ? `(${parseFn})(res, null, api)` : 'res';
+                            let thenBody = `return Promise.resolve(${dataValue}).then(function(data){ api.globalData[${JSON.stringify(item.name)}] = data;`;
+                            if (bindCode) thenBody += '\n' + bindCode.replace(/        /g, '    ');
+                            thenBody += '\n    return data;\n});';
+                            const catchBody = onError
+                                ? `(${onError})(e, api);`
+                                : 'console.error(e);';
+                            return `        api.fetch(${fetchConfig}).then(function(res){ ${thenBody} }).catch(function(e){ ${catchBody} });`;
+                        }
+                    }).join('\n');
+                    const existingMounted = options.onMounted ? stripFnWrapperGD(options.onMounted) : '';
+                    let mountedBody;
+                    if (existingMounted) {
+                        mountedBody = `function onMounted(api) {\n    api.globalData = api.globalData || {};\n${globalDataCode}\n        (${existingMounted}).call(this, api);\n    }`;
+                    } else {
+                        mountedBody = `function onMounted(api) {\n    api.globalData = api.globalData || {};\n${globalDataCode}\n    }`;
+                    }
+                    options.onMounted = FN_PREFIX + mountedBody + FN_SUFFIX;
+                    options._globalDataItems = globalDataItems;
+                }
+                if ((customEventNames.length > 0 || globalDataItems.length > 0) && originalOnMounted) {
+                    options._originOnMounted = originalOnMounted;
+                } else {
+                    delete options._originOnMounted;
+                }
+                delete options._globalData;
                 options.submitBtn = options._submitBtn;
                 options.resetBtn = options._resetBtn;
                 if (!options.resetBtn.innerText) {
@@ -1182,15 +1310,84 @@ export default defineComponent({
                     ...defForm,
                     ...options.form || {}
                 };
+                const importedCustomNames = options._customEventNames || [];
+                const importedCustomFns = options._customEventFns || {};
+                delete options._customEventNames;
+                delete options._customEventFns;
+                const importedGlobalDataItems = options._globalDataItems || [];
+                delete options._globalDataItems;
+                const normalizeImportedFnSource = (fn) => {
+                    if (!fn) return '';
+                    if (typeof fn === 'function') {
+                        return normalizeImportedFnSource(fn.__json || fn.__origin || fn.toString());
+                    }
+                    if (typeof fn !== 'string') return '';
+                    const FN_PREFIX = '[[FORM-CREATE-PREFIX-';
+                    const FN_SUFFIX = '-FORM-CREATE-SUFFIX]]';
+                    let v = fn.trim();
+                    if (v.indexOf(FN_PREFIX) === 0 && v.indexOf(FN_SUFFIX) > 0) {
+                        v = v.replace(FN_PREFIX, '').replace(FN_SUFFIX, '');
+                    }
+                    return v;
+                };
+                const extractCalledOnMounted = (fn) => {
+                    const source = normalizeImportedFnSource(fn);
+                    const calls = [];
+                    let offset = 0;
+                    while (offset < source.length) {
+                        const open = source.indexOf('(function', offset);
+                        if (open === -1) break;
+                        const start = open + 1;
+                        const brace = source.indexOf('{', start);
+                        if (brace === -1) break;
+                        let depth = 0;
+                        let end = -1;
+                        for (let i = brace; i < source.length; i++) {
+                            if (source[i] === '{') {
+                                depth++;
+                            } else if (source[i] === '}') {
+                                depth--;
+                                if (depth === 0) {
+                                    end = i;
+                                    break;
+                                }
+                            }
+                        }
+                        if (end === -1) break;
+                        if (/^\s*\)\.call\(this,\s*api\)/.test(source.slice(end + 1))) {
+                            calls.push(source.slice(start, end + 1));
+                        }
+                        offset = end + 1;
+                    }
+                    return calls.length ? calls[calls.length - 1] : '';
+                };
+                const importedOriginOnMounted = normalizeImportedFnSource(options._originOnMounted || '');
+                delete options._originOnMounted;
+                const recoveredOnMounted = importedOriginOnMounted ? '' : extractCalledOnMounted(options.onMounted);
+                let importedOnMounted = importedOriginOnMounted || recoveredOnMounted || options.onMounted || '';
+                if ((importedCustomNames.length > 0 || importedGlobalDataItems.length > 0) && importedOnMounted && !importedOriginOnMounted && !recoveredOnMounted) {
+                    importedOnMounted = '';
+                }
                 options._event = {
                     onReset: options.onReset || '',
                     onSubmit: options.onSubmit || '',
                     onCreated: options.onCreated || '',
-                    onMounted: options.onMounted || '',
+                    onMounted: importedOnMounted,
                     beforeSubmit: options.beforeSubmit || '',
                     onReload: options.onReload || '',
                     onChange: options.onChange || '',
                     beforeFetch: options.beforeFetch || '',
+                };
+                if (importedCustomNames.length > 0) {
+                    options._event._customEventNames = importedCustomNames;
+                    importedCustomNames.forEach(name => {
+                        if (importedCustomFns[name]) {
+                            options._event[name] = importedCustomFns[name];
+                        }
+                    });
+                }
+                if (importedGlobalDataItems.length > 0) {
+                    options._globalData = {_items: importedGlobalDataItems};
                 }
                 if (!hasProperty(options, 'language')) {
                     options.language = {};

@@ -1,5 +1,5 @@
 <template>
-    <div class="fc-code-preview" :style="{width: width, height: height}">
+    <div ref="rootRef" class="fc-code-preview" :style="{width: width, height: height}">
         <div v-if="chartName || chartDescription" class="fc-code-preview-header">
             <div v-if="chartName" class="fc-code-preview-title">{{ chartName }}</div>
             <div v-if="chartDescription" class="fc-code-preview-desc">{{ chartDescription }}</div>
@@ -141,10 +141,19 @@ export default defineComponent({
         },
     },
     setup(props, {emit}) {
+        const rootRef = ref(null);
         const editorRef = ref(null);
         const copyTip = ref('复制');
         let editor = null;
         let updatingEditor = false;
+        let resizeObserver = null;
+        let intersectionObserver = null;
+        let refreshTimers = [];
+
+        const clearRefreshTimers = () => {
+            refreshTimers.forEach(timer => clearTimeout(timer));
+            refreshTimers = [];
+        };
 
         const canFormat = computed(() => {
             return props.formattable && formattableLanguages.includes(props.language);
@@ -166,6 +175,27 @@ export default defineComponent({
             return languageModeMap[props.language] || null;
         };
 
+        const refreshEditor = () => {
+            if (!editor) return;
+            editor.refresh();
+        };
+
+        const scheduleRefresh = () => {
+            if (!editor) return;
+            clearRefreshTimers();
+            nextTick(() => {
+                refreshEditor();
+                if (typeof requestAnimationFrame === 'function') {
+                    requestAnimationFrame(refreshEditor);
+                    requestAnimationFrame(() => requestAnimationFrame(refreshEditor));
+                }
+                refreshTimers = [
+                    setTimeout(refreshEditor, 80),
+                    setTimeout(refreshEditor, 240),
+                ];
+            });
+        };
+
         const updateEditorValue = (val) => {
             if (!editor) return;
             if (editor.getValue() !== val) {
@@ -178,7 +208,7 @@ export default defineComponent({
                     updatingEditor = false;
                 }
             }
-            nextTick(() => editor && editor.refresh());
+            scheduleRefresh();
         };
 
         const emitInput = (val) => {
@@ -202,6 +232,28 @@ export default defineComponent({
                 if (updatingEditor) return;
                 emitInput(instance.getValue());
             });
+            scheduleRefresh();
+        };
+
+        const observeEditorLayout = () => {
+            if (typeof ResizeObserver !== 'undefined' && rootRef.value) {
+                resizeObserver = new ResizeObserver(scheduleRefresh);
+                resizeObserver.observe(rootRef.value);
+                if (editorRef.value) {
+                    resizeObserver.observe(editorRef.value);
+                }
+            }
+            if (typeof IntersectionObserver !== 'undefined' && rootRef.value) {
+                intersectionObserver = new IntersectionObserver((entries) => {
+                    if (entries.some(entry => entry.isIntersecting)) {
+                        scheduleRefresh();
+                    }
+                });
+                intersectionObserver.observe(rootRef.value);
+            }
+            if (typeof window !== 'undefined') {
+                window.addEventListener('resize', scheduleRefresh);
+            }
         };
 
         const copyCode = () => {
@@ -226,7 +278,10 @@ export default defineComponent({
         };
 
         onMounted(() => {
-            nextTick(initEditor);
+            nextTick(() => {
+                initEditor();
+                observeEditorLayout();
+            });
         });
 
         watch(codeText, (val) => {
@@ -254,14 +309,31 @@ export default defineComponent({
             if (editor) {
                 editor.setOption('readOnly', !val);
                 editor.setOption('cursorBlinkRate', val ? 530 : -1);
+                scheduleRefresh();
             }
         });
 
+        watch(() => [props.width, props.height, props.chartName, props.chartDescription, props.copyable, props.formattable], () => {
+            scheduleRefresh();
+        });
+
         onBeforeUnmount(() => {
+            clearRefreshTimers();
+            if (resizeObserver) {
+                resizeObserver.disconnect();
+                resizeObserver = null;
+            }
+            if (intersectionObserver) {
+                intersectionObserver.disconnect();
+                intersectionObserver = null;
+            }
+            if (typeof window !== 'undefined') {
+                window.removeEventListener('resize', scheduleRefresh);
+            }
             editor = null;
         });
 
-        return {editorRef, copyTip, canFormat, copyCode, formatCode};
+        return {rootRef, editorRef, copyTip, canFormat, copyCode, formatCode};
     }
 });
 </script>

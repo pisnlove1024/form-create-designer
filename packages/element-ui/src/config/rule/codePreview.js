@@ -99,6 +99,7 @@ export default {
                 options: [
                     {label: t('fetch.optionsType.struct'), value: 2},
                     {label: t('fetch.optionsType.fetch'), value: 1},
+                    {label: t('fetch.optionsType.global'), value: 3},
                 ],
                 props: {
                     type: 'button'
@@ -127,6 +128,19 @@ export default {
                                 props: {
                                     type: 'textarea',
                                     rows: 8,
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        value: 3,
+                        rule: [
+                            {
+                                type: 'GlobalDataSelect',
+                                field: 'formCreateEffect>globalData',
+                                title: t('fetch.optionsType.global'),
+                                props: {
+                                    to: 'props.chartData'
                                 }
                             }
                         ]

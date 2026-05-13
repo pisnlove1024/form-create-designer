@@ -40,6 +40,7 @@ export function makeOptionsRule(t, to) {
     const options = [
         {'label': t('fetch.optionsType.struct'), 'value': 2},
         {'label': t('fetch.optionsType.fetch'), 'value': 1},
+        {'label': t('fetch.optionsType.global'), 'value': 3},
     ];
 
     const control = [
@@ -67,6 +68,19 @@ export function makeOptionsRule(t, to) {
                     }
                 },
             ],
+        },
+        {
+            value: 3,
+            rule: [
+                {
+                    type: 'GlobalDataSelect',
+                    field: 'formCreateEffect>globalData',
+                    title: t('fetch.optionsType.global'),
+                    props: {
+                        to
+                    }
+                }
+            ],
         }
     ];
 
@@ -87,6 +101,7 @@ export function makeTreeOptionsRule(t, to, label, value) {
     const options = [
         {'label': t('fetch.optionsType.struct'), 'value': 2},
         {'label': t('fetch.optionsType.fetch'), 'value': 1},
+        {'label': t('fetch.optionsType.global'), 'value': 3},
     ];
 
     const control = [
@@ -116,6 +131,19 @@ export function makeTreeOptionsRule(t, to, label, value) {
                         keyValue: label,
                     }
                 },
+            ],
+        },
+        {
+            value: 3,
+            rule: [
+                {
+                    type: 'GlobalDataSelect',
+                    field: 'formCreateEffect>globalData',
+                    title: t('fetch.optionsType.global'),
+                    props: {
+                        to
+                    }
+                }
             ],
         }
     ];

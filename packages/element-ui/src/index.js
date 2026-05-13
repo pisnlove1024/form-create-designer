@@ -30,6 +30,8 @@ import ValueInput from './components/ValueInput.vue';
 import formCreate, {designerForm} from './utils/form';
 import FcChart from './components/FcChart.vue';
 import FcCodePreview from './components/FcCodePreview.vue';
+import GlobalDataConfig from './components/GlobalDataConfig.vue';
+import GlobalDataSelect from './components/GlobalDataSelect.vue';
 import FcEditor from '@form-create/component-wangeditor';
 import draggable from 'vuedraggable/src/vuedraggable';
 import {
@@ -77,6 +79,8 @@ designerForm.component('LanguageInput', LanguageInput);
 designerForm.component('ConfigItem', ConfigItem);
 designerForm.component('FieldInput', FieldInput);
 designerForm.component('FnConfig', FnConfig);
+designerForm.component('GlobalDataConfig', GlobalDataConfig);
+designerForm.component('GlobalDataSelect', GlobalDataSelect);
 designerForm.component('FcRow', Row);
 designerForm.component('ValueInput', ValueInput);
 addComponent('FcEditor', FcEditor);

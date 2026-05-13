@@ -31,6 +31,7 @@ const En = {
         onChange: 'Triggered when the component value changes',
         beforeSubmit: 'Triggered when form validation passed',
         beforeFetch: 'Triggered before remote data request is sent',
+        globalData: 'Global Data Source',
     },
     ai: {
         name: 'Smart Assistant',
@@ -139,6 +140,11 @@ const En = {
         type: 'Type',
         info: 'Info',
         label: 'Field',
+        customEvent: 'Custom Event',
+        addCustomEvent: 'Add Custom Event',
+        customEventPlaceholder: 'Enter custom event name',
+        customEventExists: 'Event name already exists',
+        customEventInfo: 'Global custom event, callable by any component via $inject.$f.globalEvent.{name}(data)',
         inject: {
             api: 'API of current form',
             rule: 'Generate rules for the current form',
@@ -176,6 +182,19 @@ const En = {
         hook_hidden: 'Triggered after component display status changes',
         hook_titleClick: 'Triggered when the component label is clicked',
     },
+    globalData: {
+        title: 'Set Data Source',
+        list: 'Data Source List',
+        addStatic: 'Add Static Data',
+        addFetch: 'Add Remote Data',
+        namePlaceholder: 'Enter data source name',
+        nameExists: 'Data source name already exists',
+        static: 'Static',
+        fetch: 'Remote',
+        info: 'Access via $inject.$f.globalData.{name}',
+        selectPlaceholder: 'Select global data source',
+        empty: 'Please add global data source in form config first',
+    },
     fetch: {
         title: 'Set data',
         create: 'Create data',
@@ -197,6 +216,7 @@ const En = {
         optionsType: {
             fetch: 'Fetch',
             struct: 'Static',
+            global: 'Global',
         },
         preview: 'Preview Response Data',
         test: 'Test Request',

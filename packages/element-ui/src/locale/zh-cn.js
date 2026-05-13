@@ -31,6 +31,7 @@ const ZhCn = {
         onChange: '表单组件的值发生变化时触发',
         beforeSubmit: '表单验证通过时触发',
         beforeFetch: '远程数据请求发送前触发',
+        globalData: '全局数据源',
     },
     ai: {
         name: '智能助理',
@@ -139,6 +140,11 @@ const ZhCn = {
         type: '类型',
         info: '说明',
         label: '字段',
+        customEvent: '自定义事件',
+        addCustomEvent: '添加自定义事件',
+        customEventPlaceholder: '请输入自定义事件名称',
+        customEventExists: '事件名称已存在',
+        customEventInfo: '全局自定义事件，可被任意组件通过 $inject.$f.globalEvent.{name}(data) 调用',
         inject: {
             api: '当前表单的api',
             rule: '当前表单的生成规则',
@@ -176,6 +182,19 @@ const ZhCn = {
         hook_hidden: '组件显示状态发生变化后触发',
         hook_titleClick: '点击组件的标签名称时触发',
     },
+    globalData: {
+        title: '设置数据源',
+        list: '数据源列表',
+        addStatic: '新增静态数据',
+        addFetch: '新增远程数据',
+        namePlaceholder: '请输入数据源名称',
+        nameExists: '数据源名称已存在',
+        static: '静态',
+        fetch: '远程',
+        info: '通过 $inject.$f.globalData.{name} 访问',
+        selectPlaceholder: '请选择全局数据源',
+        empty: '请先在表单配置中添加全局数据源',
+    },
     fetch: {
         title: '设置数据源',
         create: '创建数据源',
@@ -197,6 +216,7 @@ const ZhCn = {
         optionsType: {
             fetch: '远程数据',
             struct: '静态数据',
+            global: '全局数据',
         },
         preview: '预览响应数据',
         test: '测试请求',
