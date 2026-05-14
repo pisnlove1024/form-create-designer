@@ -6,6 +6,8 @@ import TableForm from '../components/tableForm/TableForm.vue';
 import Table from '../components/table/Table.vue';
 import FcChart from '../components/FcChart.vue';
 import FcCodePreview from '../components/FcCodePreview.vue';
+import FcDialog from '../components/FcDialog.vue';
+import FcDrawer from '../components/FcDrawer.vue';
 
 const install = (formCreate) => {
     formCreate.component('FcEditor', FcEditor);
@@ -15,6 +17,8 @@ const install = (formCreate) => {
     formCreate.component('FcTable', Table);
     formCreate.component('FcChart', FcChart);
     formCreate.component('FcCodePreview', FcCodePreview);
+    formCreate.component('FcDialog', FcDialog);
+    formCreate.component('FcDrawer', FcDrawer);
 }
 
 install(formCreate);

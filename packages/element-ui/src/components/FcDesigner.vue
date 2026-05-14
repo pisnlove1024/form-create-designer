@@ -1051,7 +1051,8 @@ export default defineComponent({
                 const rule = methods.getJson();
                 const options = methods.getOptionsJson();
                 data.preview.rule = designerForm.parseJson(rule);
-                data.preview.option = designerForm.parseJson(options);
+                const parsedOpt = designerForm.parseJson(options);
+                data.preview.option = parsedOpt;
                 const useV2 = methods.getConfig('useTemplate', false);
                 data.preview.component = hljs.highlight(
                     useV2 ? formTemplate(rule, options) : formTemplateV3(rule, options),
@@ -1310,8 +1311,19 @@ export default defineComponent({
                     ...defForm,
                     ...options.form || {}
                 };
-                const importedCustomNames = options._customEventNames || [];
+                // _customEventNames/Fns may live at top-level (round-trip from getOption) OR
+                // inside _event (fresh init from getShowcaseOption / designer UI)
+                const _eventRaw = options._event || {};
+                const importedCustomNames = options._customEventNames
+                    || _eventRaw._customEventNames
+                    || [];
                 const importedCustomFns = options._customEventFns || {};
+                // collect per-event function bodies from _event when not already in importedCustomFns
+                importedCustomNames.forEach(name => {
+                    if (!importedCustomFns[name] && _eventRaw[name]) {
+                        importedCustomFns[name] = _eventRaw[name];
+                    }
+                });
                 delete options._customEventNames;
                 delete options._customEventFns;
                 const importedGlobalDataItems = options._globalDataItems || [];
@@ -1364,19 +1376,21 @@ export default defineComponent({
                 const importedOriginOnMounted = normalizeImportedFnSource(options._originOnMounted || '');
                 delete options._originOnMounted;
                 const recoveredOnMounted = importedOriginOnMounted ? '' : extractCalledOnMounted(options.onMounted);
-                let importedOnMounted = importedOriginOnMounted || recoveredOnMounted || options.onMounted || '';
+                let importedOnMounted = importedOriginOnMounted || recoveredOnMounted || options.onMounted || _eventRaw.onMounted || '';
                 if ((importedCustomNames.length > 0 || importedGlobalDataItems.length > 0) && importedOnMounted && !importedOriginOnMounted && !recoveredOnMounted) {
                     importedOnMounted = '';
                 }
+                // lifecycle keys may be at top-level (round-trip) or inside _event (fresh init)
+                const _ev = _eventRaw;
                 options._event = {
-                    onReset: options.onReset || '',
-                    onSubmit: options.onSubmit || '',
-                    onCreated: options.onCreated || '',
+                    onReset: options.onReset || _ev.onReset || '',
+                    onSubmit: options.onSubmit || _ev.onSubmit || '',
+                    onCreated: options.onCreated || _ev.onCreated || '',
                     onMounted: importedOnMounted,
-                    beforeSubmit: options.beforeSubmit || '',
-                    onReload: options.onReload || '',
-                    onChange: options.onChange || '',
-                    beforeFetch: options.beforeFetch || '',
+                    beforeSubmit: options.beforeSubmit || _ev.beforeSubmit || '',
+                    onReload: options.onReload || _ev.onReload || '',
+                    onChange: options.onChange || _ev.onChange || '',
+                    beforeFetch: options.beforeFetch || _ev.beforeFetch || '',
                 };
                 if (importedCustomNames.length > 0) {
                     options._event._customEventNames = importedCustomNames;

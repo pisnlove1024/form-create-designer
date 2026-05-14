@@ -535,6 +535,62 @@ const ZhCn = {
                 shadow: '阴影显示时机',
             }
         },
+        fcDialog: {
+            name: '弹窗容器',
+            event: {
+                open: '打开时触发',
+                opened: '打开动画结束时触发',
+                close: '关闭时触发',
+                closed: '关闭动画结束时触发',
+            },
+            visibleOptions: {
+                static: '静态',
+                global: '全局数据',
+            },
+            props: {
+                visibleType: '显示控制',
+                modelValue: '是否显示',
+                title: '标题',
+                width: '宽度',
+                fullscreen: '是否全屏',
+                top: '距顶部距离',
+                modal: '是否显示遮罩层',
+                appendToBody: '是否插入至body',
+                closeOnClickModal: '点击遮罩关闭',
+                closeOnPressEscape: '按ESC关闭',
+                showClose: '是否显示关闭按钮',
+                destroyOnClose: '关闭时销毁内容',
+                draggable: '是否可拖拽',
+                alignCenter: '是否居中对齐',
+            }
+        },
+        fcDrawer: {
+            name: '抽屉容器',
+            event: {
+                open: '打开时触发',
+                opened: '打开动画结束时触发',
+                close: '关闭时触发',
+                closed: '关闭动画结束时触发',
+            },
+            visibleOptions: {
+                static: '静态',
+                global: '全局数据',
+            },
+            props: {
+                visibleType: '显示控制',
+                modelValue: '是否显示',
+                title: '标题',
+                size: '尺寸',
+                direction: '打开方向',
+                modal: '是否显示遮罩层',
+                appendToBody: '是否插入至body',
+                closeOnClickModal: '点击遮罩关闭',
+                closeOnPressEscape: '按ESC关闭',
+                showClose: '是否显示关闭按钮',
+                destroyOnClose: '关闭时销毁内容',
+                withHeader: '是否显示头部',
+            }
+        },
         elCollapse: {
             name: '折叠面板',
             event: {

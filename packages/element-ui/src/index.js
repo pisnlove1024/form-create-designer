@@ -32,6 +32,10 @@ import FcChart from './components/FcChart.vue';
 import FcCodePreview from './components/FcCodePreview.vue';
 import GlobalDataConfig from './components/GlobalDataConfig.vue';
 import GlobalDataSelect from './components/GlobalDataSelect.vue';
+import FcDialog from './components/FcDialog.vue';
+import FcDialogView from './components/FcDialogView.vue';
+import FcDrawer from './components/FcDrawer.vue';
+import FcDrawerView from './components/FcDrawerView.vue';
 import FcEditor from '@form-create/component-wangeditor';
 import draggable from 'vuedraggable/src/vuedraggable';
 import {
@@ -90,6 +94,8 @@ addComponent('TableForm', TableForm, TableFormView);
 addComponent('FcTable', Table, TableView);
 addComponent('FcChart', FcChart);
 addComponent('FcCodePreview', FcCodePreview);
+addComponent('FcDialog', FcDialog, FcDialogView);
+addComponent('FcDrawer', FcDrawer, FcDrawerView);
 
 const install = function (Vue) {
     Vue.component('FcDesigner', FcDesigner);

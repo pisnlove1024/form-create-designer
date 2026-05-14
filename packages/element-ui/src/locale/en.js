@@ -535,6 +535,62 @@ const En = {
                 shadow: 'Shadow display timing',
             }
         },
+        fcDialog: {
+            name: 'Dialog',
+            event: {
+                open: 'Triggered when opened',
+                opened: 'Triggered when open animation ends',
+                close: 'Triggered when closed',
+                closed: 'Triggered when close animation ends',
+            },
+            visibleOptions: {
+                static: 'Static',
+                global: 'Global Data',
+            },
+            props: {
+                visibleType: 'Visibility Control',
+                modelValue: 'Visible',
+                title: 'Title',
+                width: 'Width',
+                fullscreen: 'Fullscreen',
+                top: 'Top margin',
+                modal: 'Show modal overlay',
+                appendToBody: 'Append to body',
+                closeOnClickModal: 'Close on click modal',
+                closeOnPressEscape: 'Close on press Escape',
+                showClose: 'Show close button',
+                destroyOnClose: 'Destroy on close',
+                draggable: 'Draggable',
+                alignCenter: 'Align center',
+            }
+        },
+        fcDrawer: {
+            name: 'Drawer',
+            event: {
+                open: 'Triggered when opened',
+                opened: 'Triggered when open animation ends',
+                close: 'Triggered when closed',
+                closed: 'Triggered when close animation ends',
+            },
+            visibleOptions: {
+                static: 'Static',
+                global: 'Global Data',
+            },
+            props: {
+                visibleType: 'Visibility Control',
+                modelValue: 'Visible',
+                title: 'Title',
+                size: 'Size',
+                direction: 'Direction',
+                modal: 'Show modal overlay',
+                appendToBody: 'Append to body',
+                closeOnClickModal: 'Close on click modal',
+                closeOnPressEscape: 'Close on press Escape',
+                showClose: 'Show close button',
+                destroyOnClose: 'Destroy on close',
+                withHeader: 'Show header',
+            }
+        },
         elCollapse: {
             name: 'Collapse',
             event: {

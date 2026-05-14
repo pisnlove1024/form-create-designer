@@ -672,7 +672,7 @@
     min-height: 90px;
 }
 
-._fc-child-empty:after, ._fd-draggable-drag.drag-holder:after, ._fd-tableFormColumn-drag.drag-holder:after, ._fd-elTabPane-drag.drag-holder:after, ._fd-group-drag.drag-holder:after, ._fd-subForm-drag.drag-holder:after, ._fd-elCard-drag.drag-holder:after, ._fd-elCollapseItem-drag.drag-holder:after {
+._fc-child-empty:after, ._fd-draggable-drag.drag-holder:after, ._fd-tableFormColumn-drag.drag-holder:after, ._fd-elTabPane-drag.drag-holder:after, ._fd-group-drag.drag-holder:after, ._fd-subForm-drag.drag-holder:after, ._fd-elCard-drag.drag-holder:after, ._fd-elCollapseItem-drag.drag-holder:after, ._fd-fcDialog-drag.drag-holder:after, ._fd-fcDrawer-drag.drag-holder:after {
     content: var(--fc-drag-empty);
     position: absolute;
     top: 0;

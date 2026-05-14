@@ -89,6 +89,19 @@ const SHOWCASE_LANGUAGE = {
         richText: '富文本',
         attachments: '附件上传',
         signature: '电子签名',
+        dialogDrawerTab: '弹窗抽屉',
+        dialogTitle: '弹窗容器示例',
+        dialogAlert: '弹窗和抽屉支持静态开关和全局数据绑定两种控制方式。点击按钮可打开对应的弹窗或抽屉。',
+        openDialogBtn: '打开弹窗',
+        openDrawerBtn: '打开抽屉',
+        closeDialogBtn: '关闭弹窗',
+        closeDrawerBtn: '收起抽屉',
+        dialogContent: '这是弹窗内的表单内容',
+        dialogField: '弹窗输入',
+        dialogFieldPlaceholder: '在弹窗中输入内容',
+        drawerContent: '这是抽屉内的表单内容',
+        drawerField: '抽屉输入',
+        drawerFieldPlaceholder: '在抽屉中输入内容',
         practiceTab: '最佳实践',
         practiceTitle: '新增能力使用说明',
         practiceIntro: '这个示例把代码展示、图表、全局变量、全局方法、远程请求、语言变量和组件事件串成一个完整闭环，可作为新表单模板的参考。',
@@ -125,6 +138,11 @@ const SHOWCASE_LANGUAGE = {
         practiceFlowB: '数据处理：parse 把接口响应转换为组件消费的结构。',
         practiceFlowC: '组件更新：to 明确写入 options、props.options 或 props.chartData。',
         practiceFlowD: '行为扩展：on.change / click 调用 api.globalEvent 中的自定义方法。',
+        practiceDialogTitle: '弹窗 / 抽屉容器',
+        practiceDialogA: '弹窗和抽屉需要设置 field 字段（如 showDialog）并设置 value 为 false，通过表单数据模型控制显隐。',
+        practiceDialogB: '打开：在按钮 click 事件中调用 api.setValue("showDialog", true)；或在全局自定义事件中定义 onOpenDialog 方法，通过 data.api.setValue() 控制。',
+        practiceDialogC: '关闭：监听弹窗/抽屉的 close 事件，在事件处理中调用 api.setValue("showDialog", false)，实现点击遮罩或关闭按钮自动关闭。',
+        practiceDialogD: '注意：不要直接修改 rule.props.modelValue，因为有 field 的组件其 modelValue 由表单数据模型驱动，直接修改会被覆盖。',
     },
     en: {
         demoTitle: 'Title',
@@ -211,6 +229,19 @@ const SHOWCASE_LANGUAGE = {
         richText: 'Rich Text',
         attachments: 'Attachments',
         signature: 'Signature',
+        dialogDrawerTab: 'Dialog & Drawer',
+        dialogTitle: 'Dialog & Drawer Example',
+        dialogAlert: 'Dialog and Drawer support static toggle and global data binding. Click buttons to open them.',
+        openDialogBtn: 'Open Dialog',
+        openDrawerBtn: 'Open Drawer',
+        closeDialogBtn: 'Close Dialog',
+        closeDrawerBtn: 'Collapse Drawer',
+        dialogContent: 'Form content inside the dialog',
+        dialogField: 'Dialog Input',
+        dialogFieldPlaceholder: 'Enter content in dialog',
+        drawerContent: 'Form content inside the drawer',
+        drawerField: 'Drawer Input',
+        drawerFieldPlaceholder: 'Enter content in drawer',
         practiceTab: 'Best Practices',
         practiceTitle: 'New Capability Guide',
         practiceIntro: 'This example connects code preview, charts, global data, global methods, remote fetch, language variables, and component events into one complete workflow.',
@@ -247,6 +278,11 @@ const SHOWCASE_LANGUAGE = {
         practiceFlowB: 'Data transform: parse converts API responses into the shape consumed by the component.',
         practiceFlowC: 'Component update: to explicitly writes into options, props.options, or props.chartData.',
         practiceFlowD: 'Behavior extension: on.change / click calls custom methods from api.globalEvent.',
+        practiceDialogTitle: 'Dialog / Drawer Container',
+        practiceDialogA: 'Dialog and Drawer require a field (e.g. showDialog) with value set to false, controlling visibility through the form data model.',
+        practiceDialogB: 'Open: call api.setValue("showDialog", true) in a button click event; or define an onOpenDialog method in global custom events and use data.api.setValue() to control it.',
+        practiceDialogC: 'Close: listen to the close event on the dialog/drawer, call api.setValue("showDialog", false) in the handler, so clicking the overlay or close button auto-hides it.',
+        practiceDialogD: 'Note: do not modify rule.props.modelValue directly — for components with a field, modelValue is driven by the form data model and direct changes will be overridden.',
     },
 };
 
@@ -377,6 +413,17 @@ const globalEventCall = (name, payload = '{value: $inject.args[0]}') => {
         `handler && handler(${payload});`;
 };
 
+const dialogDrawerEventCall = (name, field, visible, source) => {
+    return '$FNX:var api = $inject.$f;\n' +
+        `var payload = {source: ${JSON.stringify(source)}, api: api};\n` +
+        `var handler = api && api.globalEvent && api.globalEvent[${JSON.stringify(name)}];\n` +
+        'if (handler) {\n' +
+        '  handler(payload);\n' +
+        '} else if (api) {\n' +
+        `  api.setValue(${JSON.stringify(field)}, ${visible});\n` +
+        '}';
+};
+
 const fetchConfig = (action, parse, extra = {}) => ({
     action,
     method: 'GET',
@@ -449,6 +496,10 @@ const getCustomEvents = () => {
         'onProjectChange',
         'onMemberChange',
         'onApprovalChange',
+        'onOpenDialog',
+        'onCloseDialog',
+        'onOpenDrawer',
+        'onCloseDrawer',
     ];
     const events = {
         _customEventNames: eventNames,
@@ -464,6 +515,10 @@ const getCustomEvents = () => {
         onProjectChange: wrapFn('function onProjectChange(data){ console.log("[项目变化]", data); }'),
         onMemberChange: wrapFn('function onMemberChange(data){ console.log("[成员变化]", data); }'),
         onApprovalChange: wrapFn('function onApprovalChange(data){ console.log("[审批信息变化]", data); }'),
+        onOpenDialog: wrapFn('function onOpenDialog(data){\n  var api = data && data.api;\n  if(api) {\n    api.setValue("showDialog", true);\n  }\n  console.log("[打开弹窗]", data);\n}'),
+        onCloseDialog: wrapFn('function onCloseDialog(data){\n  var api = data && data.api;\n  if(api) {\n    api.setValue("showDialog", false);\n  }\n  console.log("[关闭弹窗]", data);\n}'),
+        onOpenDrawer: wrapFn('function onOpenDrawer(data){\n  var api = data && data.api;\n  if(api) {\n    api.setValue("showDrawer", true);\n  }\n  console.log("[打开抽屉]", data);\n}'),
+        onCloseDrawer: wrapFn('function onCloseDrawer(data){\n  var api = data && data.api;\n  if(api) {\n    api.setValue("showDrawer", false);\n  }\n  console.log("[关闭抽屉]", data);\n}'),
     };
     return events;
 };
@@ -512,6 +567,7 @@ const makeCapabilityGuideHtml = (t) => {
         makePracticeCard(t('practiceGlobalEventTitle'), [t('practiceGlobalEventA'), t('practiceGlobalEventB'), t('practiceGlobalEventC')]),
         makePracticeCard(t('practiceRemoteTitle'), [t('practiceRemoteA'), t('practiceRemoteB'), t('practiceRemoteC')]),
         makePracticeCard(t('practiceLanguageTitle'), [t('practiceLanguageA'), t('practiceLanguageB'), t('practiceLanguageC')]),
+        makePracticeCard(t('practiceDialogTitle'), [t('practiceDialogA'), t('practiceDialogB'), t('practiceDialogC'), t('practiceDialogD')]),
         makePracticeCard(t('practiceBindingTitle'), [t('practiceBindingA'), t('practiceBindingB'), t('practiceBindingC')]),
         makePracticeCard(t('practiceFlowTitle'), [t('practiceFlowA'), t('practiceFlowB'), t('practiceFlowC'), t('practiceFlowD')]),
     ];
@@ -1173,6 +1229,127 @@ function advancedTab(t) {
     };
 }
 
+function dialogDrawerTab(t) {
+    return {
+        type: 'elTabPane',
+        _fc_drag_tag: 'elTabPane',
+        _fc_id: 'show_tab_dialog_drawer',
+        props: {label: t('dialogDrawerTab')},
+        children: [
+            alertRule('show_alert_dialog', t('dialogAlert')),
+            row('show_row_dialog_btns', [
+                col('show_col_dialog_btn', 12, {
+                    type: 'elButton',
+                    _fc_drag_tag: 'elButton',
+                    _fc_id: 'show_open_dialog_btn',
+                    props: {type: 'primary', size: 'default'},
+                    on: {
+                        click: dialogDrawerEventCall('onOpenDialog', 'showDialog', true, 'dialogBtn'),
+                    },
+                    children: [t('openDialogBtn')],
+                }),
+                col('show_col_drawer_btn', 12, {
+                    type: 'elButton',
+                    _fc_drag_tag: 'elButton',
+                    _fc_id: 'show_open_drawer_btn',
+                    props: {type: 'success', size: 'default'},
+                    on: {
+                        click: dialogDrawerEventCall('onOpenDrawer', 'showDrawer', true, 'drawerBtn'),
+                    },
+                    children: [t('openDrawerBtn')],
+                }),
+            ]),
+            {
+                type: 'fcDialog',
+                _fc_drag_tag: 'fcDialog',
+                _fc_id: 'show_dialog',
+                field: 'showDialog',
+                name: 'showDialog',
+                value: false,
+                props: {
+                    title: t('dialogTitle'),
+                    modelValue: false,
+                    width: '50%',
+                    closeOnClickModal: true,
+                    showClose: true,
+                    draggable: true,
+                    appendToBody: true,
+                },
+                effect: {
+                    fetch: '',
+                },
+                on: {
+                    close: dialogDrawerEventCall('onCloseDialog', 'showDialog', false, 'dialogClose'),
+                },
+                style: {width: '100%'},
+                children: [
+                    {
+                        type: 'input',
+                        _fc_drag_tag: 'input',
+                        _fc_id: 'show_dialog_field',
+                        field: 'dialogInput',
+                        title: t('dialogField'),
+                        props: {placeholder: t('dialogFieldPlaceholder')},
+                    },
+                    {
+                        type: 'elButton',
+                        _fc_drag_tag: 'elButton',
+                        _fc_id: 'show_close_dialog_btn',
+                        props: {type: 'primary', plain: true, size: 'default'},
+                        on: {
+                            click: dialogDrawerEventCall('onCloseDialog', 'showDialog', false, 'dialogInnerBtn'),
+                        },
+                        children: [t('closeDialogBtn')],
+                    },
+                ],
+            },
+            {
+                type: 'fcDrawer',
+                _fc_drag_tag: 'fcDrawer',
+                _fc_id: 'show_drawer',
+                field: 'showDrawer',
+                name: 'showDrawer',
+                value: false,
+                props: {
+                    title: t('drawerContent'),
+                    modelValue: false,
+                    size: '30%',
+                    direction: 'rtl',
+                    showClose: true,
+                    appendToBody: true,
+                },
+                effect: {
+                    fetch: '',
+                },
+                on: {
+                    close: dialogDrawerEventCall('onCloseDrawer', 'showDrawer', false, 'drawerClose'),
+                },
+                style: {width: '100%'},
+                children: [
+                    {
+                        type: 'input',
+                        _fc_drag_tag: 'input',
+                        _fc_id: 'show_drawer_field',
+                        field: 'drawerInput',
+                        title: t('drawerField'),
+                        props: {placeholder: t('drawerFieldPlaceholder')},
+                    },
+                    {
+                        type: 'elButton',
+                        _fc_drag_tag: 'elButton',
+                        _fc_id: 'show_close_drawer_btn',
+                        props: {type: 'success', plain: true, size: 'default'},
+                        on: {
+                            click: dialogDrawerEventCall('onCloseDrawer', 'showDrawer', false, 'drawerInnerBtn'),
+                        },
+                        children: [t('closeDrawerBtn')],
+                    },
+                ],
+            },
+        ],
+    };
+}
+
 function practiceTab(t) {
     return {
         type: 'elTabPane',
@@ -1209,6 +1386,7 @@ export function getShowcaseRule(lang = 'zh-cn') {
             codeChartTab(t),
             layoutTab(t),
             advancedTab(t),
+            dialogDrawerTab(t),
             practiceTab(t),
         ],
     }];
