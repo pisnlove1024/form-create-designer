@@ -19,13 +19,19 @@ export default {
             title: t('com.fcEditor.name'),
             info: '',
             $required: false,
-            props: {},
+            props: {
+                hideToolbar: false,
+            },
         };
     },
     props(_, {t}) {
         return localeProps(t, name + '.props', [{
             type: 'switch',
             field: 'disabled'
+        }, {
+            type: 'switch',
+            field: 'hideToolbar',
+            value: false
         }]);
     }
 };

@@ -11,6 +11,7 @@ export default {
     drag: true,
     inside: false,
     mask: false,
+    hiddenBaseField: ['formCreateCol>span', 'formCreateWrap>labelWidth'],
     event: ['open', 'opened', 'close', 'closed'],
     rule({t}) {
         return {
@@ -69,11 +70,7 @@ export default {
                 ]
             },
             {type: 'input', field: 'title'},
-            {
-                type: 'input',
-                field: 'size',
-                value: '30%',
-            },
+            {type: 'input', field: 'size', value: '50%', props: {placeholder: '支持50%, 600px, 50vw等格式'}},
             {
                 type: 'select',
                 field: 'direction',

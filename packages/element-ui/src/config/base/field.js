@@ -17,6 +17,22 @@ export default function field({t}) {
             value: '',
             title: t('form.info'),
         }, {
+            type: 'radio',
+            field: 'formCreateCol>span',
+            value: 24,
+            title: t('form.componentWidth'),
+            options: [
+                {label: '1/4', value: 6},
+                {label: '1/3', value: 8},
+                {label: '1/2', value: 12},
+                {label: '2/3', value: 16},
+                {label: '3/4', value: 18},
+                {label: t('form.fullWidth'), value: 24},
+            ],
+            props: {
+                type: 'button'
+            }
+        }, {
             type: 'SizeInput',
             field: 'formCreateWrap>labelWidth',
             value: '',

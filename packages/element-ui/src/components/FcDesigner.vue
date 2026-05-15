@@ -1886,7 +1886,7 @@ export default defineComponent({
                         });
                     }
                 });
-                ['props', 'effect', 'attrs', 'style', 'wrap'].forEach(name => {
+                ['props', 'effect', 'attrs', 'style', 'wrap', 'col'].forEach(name => {
                     rule[name] && (typeof rule[name] === 'object') && Object.keys(rule[name]).forEach(k => {
                         formData['formCreate' + upper(name) + '>' + k] = deepCopy(rule[name][k]);
                     });
@@ -1908,6 +1908,7 @@ export default defineComponent({
                         title: rule.title || '',
                         info: rule.info,
                         _control: rule._control,
+                        'formCreateCol>span': rule.col?.span ?? 24,
                         ...formData
                     };
                     data.validateForm.value = {

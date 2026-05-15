@@ -1,5 +1,5 @@
 import formCreate from '@form-create/element-ui';
-import FcEditor from '@form-create/component-wangeditor';
+import FcEditor from '../components/FcEditor.vue';
 import FcTitle from '../components/FcTitle.vue';
 import SignaturePad from '../components/SignaturePad.vue';
 import TableForm from '../components/tableForm/TableForm.vue';

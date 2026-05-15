@@ -36,7 +36,7 @@ import FcDialog from './components/FcDialog.vue';
 import FcDialogView from './components/FcDialogView.vue';
 import FcDrawer from './components/FcDrawer.vue';
 import FcDrawerView from './components/FcDrawerView.vue';
-import FcEditor from '@form-create/component-wangeditor';
+import FcEditor from './components/FcEditor.vue';
 import draggable from 'vuedraggable/src/vuedraggable';
 import {
     compareVersion,

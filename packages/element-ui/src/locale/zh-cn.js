@@ -11,6 +11,8 @@ const ZhCn = {
         size: '表单的尺寸',
         event: '表单事件',
         labelWidth: '标签的宽度',
+        componentWidth: '组件宽度',
+        fullWidth: '整行',
         hideRequiredAsterisk: '隐藏必填字段的标签旁边的红色星号',
         showMessage: '显示校验错误信息',
         inlineMessage: '以行内形式展示校验信息',
@@ -756,7 +758,8 @@ const ZhCn = {
         fcEditor: {
             name: '富文本框',
             props: {
-                disabled: '是否禁用'
+                disabled: '是否禁用',
+                hideToolbar: '隐藏工具栏'
             }
         },
         fcRow: {

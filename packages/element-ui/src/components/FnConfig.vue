@@ -15,31 +15,35 @@
                                 {{ t('event.list') }}
                             </el-text>
                         </el-header>
-                        <el-main>
+                        <el-main class="_fd-fn-list-body">
                             <el-menu
-                                :default-active="defActive"
-                                v-model="activeData">
+                                class="_fd-fn-list-menu"
+                                :default-active="defActive">
                                 <template v-for="(item, name) in event">
-                                    <el-menu-item :index="name">
-                                        <div class="_fd-fn-list-method" @click.stop="edit(item)">
-                                            <span>function<span>{{ name }}</span></span>
-                                            <span class="_fd-label" v-if="eventInfo[name]">{{ eventInfo[name] }}</span>
+                                    <el-menu-item :index="name" @click="edit(item)">
+                                        <div class="_fd-fn-list-title">
+                                            <div class="_fd-fn-list-method">
+                                                <span>function<span>{{ name }}</span></span>
+                                                <span class="_fd-label" v-if="eventInfo[name]">{{ eventInfo[name] }}</span>
+                                            </div>
                                             <span class="_fd-dot" v-if="item.fn"></span>
                                         </div>
                                     </el-menu-item>
                                 </template>
                             </el-menu>
                             <el-divider>{{ t('event.customEvent') }}</el-divider>
+                            <p class="_fd-fn-list-custom-tip">{{ t('event.customEventInfo') }}</p>
                             <el-menu
-                                :default-active="defActive"
-                                v-model="activeData">
+                                class="_fd-fn-list-menu _fd-fn-list-menu--custom"
+                                :default-active="defActive">
                                 <template v-for="(item, name) in customEvent">
-                                    <el-menu-item :index="name">
-                                        <div class="_fd-fn-list-method" @click.stop="edit(item)">
-                                            <span>function<span>{{ name }}</span></span>
-                                            <span class="_fd-label">{{ t('event.customEventInfo') }}</span>
+                                    <el-menu-item :index="name" @click="edit(item)">
+                                        <div class="_fd-fn-list-title">
+                                            <div class="_fd-fn-list-method">
+                                                <span>function<span>{{ name }}</span></span>
+                                            </div>
                                             <span class="_fd-dot" v-if="item.fn"></span>
-                                            <i class="fc-icon icon-delete _fd-fn-list-del" @click.stop="removeCustomEvent(name)"></i>
+                                            <i class="fc-icon icon-delete" @click.stop="removeCustomEvent(name)"></i>
                                         </div>
                                     </el-menu-item>
                                 </template>
@@ -319,6 +323,34 @@ export default defineComponent({
     overflow: auto;
 }
 
+._fd-fn-list-body {
+    display: flex;
+    flex-direction: column;
+    overflow: auto;
+}
+
+._fd-fn-list-menu {
+    flex-shrink: 0;
+}
+
+._fd-fn-list-custom-tip {
+    margin: 0;
+    padding: 0 12px 8px;
+    font-size: 12px;
+    line-height: 1.5;
+    color: #909399;
+    word-break: break-word;
+}
+
+._fd-fn-list-title {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    padding: 10px 12px;
+    box-sizing: border-box;
+}
+
 ._fd-fn-list-r > .el-main {
     flex-direction: column;
 }
@@ -337,26 +369,32 @@ export default defineComponent({
 }
 
 ._fd-fn-list-l .el-menu-item {
-    height: auto;
-    line-height: 1em;
+    height: auto !important;
+    min-height: 44px;
+    line-height: 1.4;
     border: 1px solid #ECECEC;
     border-radius: 5px;
-    padding: 0;
+    padding: 0 !important;
     margin-top: 5px;
+    white-space: normal;
+}
+
+._fd-fn-list-l .el-menu-item > * {
+    width: 100%;
 }
 
 ._fd-fn-list-method {
     display: flex;
     flex-direction: column;
     justify-content: center;
-    padding: 10px 20px 10px 0;
+    flex: 1;
+    min-width: 0;
     font-size: 14px;
-    line-height: 1em;
+    line-height: 1.4;
     font-family: monospace;
-    width: 100%;
     overflow: hidden;
-    white-space: pre-wrap;
-    position: relative;
+    white-space: normal;
+    word-break: break-word;
     box-sizing: border-box;
 }
 
@@ -367,23 +405,19 @@ export default defineComponent({
     font-size: 12px;
 }
 
-._fd-fn-list-method ._fd-dot {
-    position: absolute;
-    top: 50%;
-    margin-top: -3px;
-    right: 16px;
+._fd-fn-list-title ._fd-dot {
+    flex-shrink: 0;
     display: block;
     width: 6px;
     height: 6px;
+    margin-right: 8px;
     background: #00C050;
     border-radius: 15px;
 }
 
-._fd-fn-list-del {
-    position: absolute;
-    top: 50%;
-    margin-top: -9px;
-    right: 30px;
+._fd-fn-list-title .fc-icon {
+    flex-shrink: 0;
+    margin-left: 8px;
     font-size: 18px;
     color: #F56C6C;
     cursor: pointer;
