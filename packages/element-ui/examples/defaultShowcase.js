@@ -143,6 +143,29 @@ const SHOWCASE_LANGUAGE = {
         practiceDialogB: '打开：在按钮 click 事件中调用 api.setValue("showDialog", true)；或在全局自定义事件中定义 onOpenDialog 方法，通过 data.api.setValue() 控制。',
         practiceDialogC: '关闭：监听弹窗/抽屉的 close 事件，在事件处理中调用 api.setValue("showDialog", false)，实现点击遮罩或关闭按钮自动关闭。',
         practiceDialogD: '注意：不要直接修改 rule.props.modelValue，因为有 field 的组件其 modelValue 由表单数据模型驱动，直接修改会被覆盖。',
+        dataTableTab: '数据表格',
+        dtTitle: '员工数据表',
+        dtAlert: '展示型数据表格：列渲染（标签/链接/图片）、筛选（静态/全局数据源）、排序、多选、分页、行点击与操作按钮回调全部可在配置面板中维护。',
+        dtColId: '编号',
+        dtColAvatar: '头像',
+        dtColName: '姓名',
+        dtColCity: '城市',
+        dtColStatus: '状态',
+        dtColGrade: '评级',
+        dtCityBJ: '北京',
+        dtCitySH: '上海',
+        dtCityGZ: '广州',
+        dtStatusActive: '在职',
+        dtStatusLeft: '离职',
+        dtActionView: '查看',
+        dtActionEdit: '编辑',
+        dtActionDelete: '删除',
+        dtEmpty: '暂无数据',
+        practiceDataTableTitle: '数据表格',
+        practiceDataTableA: '数据源：静态数据写入 props.data；远程 / 全局可用 effect.fetch / effect.globalData 把列表写入 props.data。',
+        practiceDataTableB: '列渲染：render 支持 normal / tag / link / image；列筛选 filter 支持 static / global / fetch 三种数据源，选项结构统一为 {label, value}。',
+        practiceDataTableC: '排序：normal 在组件内对全量数据排序；custom 仅抛出 sortChange 事件，由外部接口重新取数（与分页/筛选互不影响）。',
+        practiceDataTableD: '交互：操作按钮的 点击 / 禁用 / 隐藏 均为 (row, index) 回调；selectionChange / rowClick / linkClick / pageChange 等事件可对接全局方法。',
     },
     en: {
         demoTitle: 'Title',
@@ -283,6 +306,29 @@ const SHOWCASE_LANGUAGE = {
         practiceDialogB: 'Open: call api.setValue("showDialog", true) in a button click event; or define an onOpenDialog method in global custom events and use data.api.setValue() to control it.',
         practiceDialogC: 'Close: listen to the close event on the dialog/drawer, call api.setValue("showDialog", false) in the handler, so clicking the overlay or close button auto-hides it.',
         practiceDialogD: 'Note: do not modify rule.props.modelValue directly — for components with a field, modelValue is driven by the form data model and direct changes will be overridden.',
+        dataTableTab: 'Data Table',
+        dtTitle: 'Employee Data Table',
+        dtAlert: 'Display table: column render (tag/link/image), filter (static/global source), sort, selection, pagination, row click and action callbacks are all configurable.',
+        dtColId: 'ID',
+        dtColAvatar: 'Avatar',
+        dtColName: 'Name',
+        dtColCity: 'City',
+        dtColStatus: 'Status',
+        dtColGrade: 'Grade',
+        dtCityBJ: 'Beijing',
+        dtCitySH: 'Shanghai',
+        dtCityGZ: 'Guangzhou',
+        dtStatusActive: 'Active',
+        dtStatusLeft: 'Left',
+        dtActionView: 'View',
+        dtActionEdit: 'Edit',
+        dtActionDelete: 'Delete',
+        dtEmpty: 'No data',
+        practiceDataTableTitle: 'Data Table',
+        practiceDataTableA: 'Data source: static data goes to props.data; remote/global can use effect.fetch / effect.globalData to write the list into props.data.',
+        practiceDataTableB: 'Column render: render supports normal/tag/link/image; column filter supports static/global/fetch sources with unified {label, value} options.',
+        practiceDataTableC: 'Sorting: normal sorts the full dataset inside the component; custom only emits sortChange so the backend can refetch (independent from paging/filtering).',
+        practiceDataTableD: 'Interaction: action click/disabled/hidden are (row, index) callbacks; selectionChange/rowClick/linkClick/pageChange can bind global methods.',
     },
 };
 
@@ -371,6 +417,11 @@ const GLOBAL_DATA = {
             },
         ],
     },
+    tableGrades: [
+        {label: 'A', value: 'A'},
+        {label: 'B', value: 'B'},
+        {label: 'C', value: 'C'},
+    ],
 };
 
 const AREA_OPTIONS = [
@@ -378,6 +429,9 @@ const AREA_OPTIONS = [
     {label: '华东', value: 'east', children: [{label: '上海', value: 'shanghai'}, {label: '杭州', value: 'hangzhou'}]},
     {label: '华南', value: 'south', children: [{label: '广州', value: 'guangzhou'}, {label: '深圳', value: 'shenzhen'}]},
 ];
+
+const TABLE_AVATAR = 'https://static.form-create.com/example.png';
+const TABLE_NAMES = ['Avery', 'Blake', 'Casey', 'Dana', 'Eden', 'Frankie', 'Gray', 'Harper'];
 
 const clone = (data) => JSON.parse(JSON.stringify(data));
 const wrapFn = (body) => FN_PREFIX + body + FN_SUFFIX;
@@ -500,6 +554,10 @@ const getCustomEvents = () => {
         'onCloseDialog',
         'onOpenDrawer',
         'onCloseDrawer',
+        'onTableSelection',
+        'onTablePage',
+        'onTableRowClick',
+        'onTableLinkClick',
     ];
     const events = {
         _customEventNames: eventNames,
@@ -519,6 +577,10 @@ const getCustomEvents = () => {
         onCloseDialog: wrapFn('function onCloseDialog(data){\n  var api = data && data.api;\n  if(api) {\n    api.setValue("showDialog", false);\n  }\n  console.log("[关闭弹窗]", data);\n}'),
         onOpenDrawer: wrapFn('function onOpenDrawer(data){\n  var api = data && data.api;\n  if(api) {\n    api.setValue("showDrawer", true);\n  }\n  console.log("[打开抽屉]", data);\n}'),
         onCloseDrawer: wrapFn('function onCloseDrawer(data){\n  var api = data && data.api;\n  if(api) {\n    api.setValue("showDrawer", false);\n  }\n  console.log("[关闭抽屉]", data);\n}'),
+        onTableSelection: wrapFn('function onTableSelection(data){ console.log("[表格多选]", data); }'),
+        onTablePage: wrapFn('function onTablePage(data){ console.log("[表格分页]", data); }'),
+        onTableRowClick: wrapFn('function onTableRowClick(data){ console.log("[表格行点击]", data); }'),
+        onTableLinkClick: wrapFn('function onTableLinkClick(data){ console.log("[表格链接点击]", data); }'),
     };
     return events;
 };
@@ -563,6 +625,7 @@ const makeCapabilityGuideHtml = (t) => {
     const cards = [
         makePracticeCard(t('practiceCodeTitle'), [t('practiceCodeA'), t('practiceCodeB'), t('practiceCodeC')]),
         makePracticeCard(t('practiceChartTitle'), [t('practiceChartA'), t('practiceChartB'), t('practiceChartC')]),
+        makePracticeCard(t('practiceDataTableTitle'), [t('practiceDataTableA'), t('practiceDataTableB'), t('practiceDataTableC'), t('practiceDataTableD')]),
         makePracticeCard(t('practiceGlobalDataTitle'), [t('practiceGlobalDataA'), t('practiceGlobalDataB'), t('practiceGlobalDataC')]),
         makePracticeCard(t('practiceGlobalEventTitle'), [t('practiceGlobalEventA'), t('practiceGlobalEventB'), t('practiceGlobalEventC')]),
         makePracticeCard(t('practiceRemoteTitle'), [t('practiceRemoteA'), t('practiceRemoteB'), t('practiceRemoteC')]),
@@ -1350,6 +1413,82 @@ function dialogDrawerTab(t) {
     };
 }
 
+function makeTableData(t) {
+    const cities = [t('dtCityBJ'), t('dtCitySH'), t('dtCityGZ')];
+    const statuses = [t('dtStatusActive'), t('dtStatusLeft')];
+    const grades = ['A', 'B', 'C'];
+    return TABLE_NAMES.map((name, i) => ({
+        id: i + 1,
+        avatar: i === 2 ? '' : TABLE_AVATAR,
+        name,
+        city: cities[i % cities.length],
+        status: statuses[i % 2],
+        grade: grades[i % grades.length],
+    }));
+}
+
+function dataTableTab(t) {
+    const cityOptions = [t('dtCityBJ'), t('dtCitySH'), t('dtCityGZ')].map(c => ({label: c, value: c}));
+    const statusOptions = [t('dtStatusActive'), t('dtStatusLeft')].map(s => ({label: s, value: s}));
+    return {
+        type: 'elTabPane',
+        _fc_drag_tag: 'elTabPane',
+        _fc_id: 'show_tab_data_table',
+        props: {label: t('dataTableTab')},
+        children: [
+            alertRule('show_alert_data_table', t('dtAlert')),
+            {
+                type: 'fcDataTable',
+                _fc_drag_tag: 'fcDataTable',
+                _fc_id: 'show_data_table',
+                field: 'employeeTable',
+                title: t('dtTitle'),
+                props: {
+                    data: makeTableData(t),
+                    columns: [
+                        {prop: 'id', label: t('dtColId'), width: '70', filter: '', className: '', sort: 'normal', overflow: '', fixed: '', align: 'center', render: 'normal', hide: false},
+                        {prop: 'avatar', label: t('dtColAvatar'), width: '90', filter: '', className: '', sort: '', overflow: '', fixed: '', align: 'center', render: 'image', hide: false},
+                        {prop: 'name', label: t('dtColName'), width: '', filter: '', className: '', sort: 'normal', overflow: '', fixed: '', align: 'left', render: 'link', hide: false},
+                        {prop: 'city', label: t('dtColCity'), width: '120', filter: {type: 'static', options: cityOptions, fetch: {}, global: ''}, className: '', sort: '', overflow: '', fixed: '', align: 'center', render: 'normal', hide: false},
+                        {prop: 'status', label: t('dtColStatus'), width: '110', filter: {type: 'static', options: statusOptions, fetch: {}, global: ''}, className: '', sort: '', overflow: '', fixed: '', align: 'center', render: 'tag', hide: false},
+                        {prop: 'grade', label: t('dtColGrade'), width: '110', filter: {type: 'global', options: [], fetch: {}, global: 'tableGrades'}, className: '', sort: 'normal', overflow: '', fixed: '', align: 'center', render: 'normal', hide: false},
+                    ],
+                    actions: [
+                        {id: 'view', label: t('dtActionView'), type: 'primary', size: 'small', decorate: ['text'], hide: false, disabledFn: '', hiddenFn: '', clickFn: wrapFn('function(row){ console.log("[view]", row); }')},
+                        {id: 'edit', label: t('dtActionEdit'), type: 'warning', size: 'small', decorate: ['text'], hide: false, disabledFn: wrapFn('function(row){ return row.status === ' + JSON.stringify(t('dtStatusLeft')) + '; }'), hiddenFn: '', clickFn: wrapFn('function(row){ console.log("[edit]", row); }')},
+                        {id: 'del', label: t('dtActionDelete'), type: 'danger', size: 'small', decorate: ['text'], hide: false, disabledFn: '', hiddenFn: '', clickFn: wrapFn('function(row){ console.log("[delete]", row); }')},
+                    ],
+                    actionLabel: '',
+                    actionWidth: '190',
+                    actionFixed: 'right',
+                    border: true,
+                    stripe: true,
+                    size: 'default',
+                    showIndex: true,
+                    selection: true,
+                    highlightCurrentRow: true,
+                    pagination: true,
+                    pageSize: 5,
+                    height: '',
+                    maxHeight: '',
+                    emptyText: t('dtEmpty'),
+                    rowKey: 'id',
+                },
+                effect: {fetch: ''},
+                on: {
+                    selectionChange: globalEventCall('onTableSelection', '{rows: $inject.args[0]}'),
+                    sortChange: globalEventCall('onDataRefresh', '{source: "tableSort", sort: $inject.args[0]}'),
+                    filterChange: globalEventCall('onDataRefresh', '{source: "tableFilter", filter: $inject.args[0]}'),
+                    pageChange: globalEventCall('onTablePage', '{page: $inject.args[0]}'),
+                    rowClick: globalEventCall('onTableRowClick', '{row: $inject.args[0]}'),
+                    linkClick: globalEventCall('onTableLinkClick', '{row: $inject.args[0], prop: $inject.args[1]}'),
+                },
+                style: {width: '100%'},
+            },
+        ],
+    };
+}
+
 function practiceTab(t) {
     return {
         type: 'elTabPane',
@@ -1387,6 +1526,7 @@ export function getShowcaseRule(lang = 'zh-cn') {
             layoutTab(t),
             advancedTab(t),
             dialogDrawerTab(t),
+            dataTableTab(t),
             practiceTab(t),
         ],
     }];

@@ -106,6 +106,93 @@ const ZhCn = {
         required: '是否必填',
         rule: '验证规则',
     },
+    dataTableColumns: {
+        title: '列配置',
+        prop: '字段名称',
+        label: '标题',
+        width: '宽度',
+        filter: '筛选',
+        className: 'Class',
+        sort: '排序',
+        overflow: '溢出显示',
+        fixed: '位置',
+        align: '对齐方式',
+        render: '渲染',
+        hide: '隐藏',
+        operation: '操作',
+        add: '添加',
+        placeholder: '请选择',
+        sortType: {
+            none: '不排序',
+            normal: '常规排序',
+            remote: '接口排序',
+        },
+        overflowType: {
+            default: '默认',
+            tooltip: '提示',
+        },
+        fixedType: {
+            normal: '常规',
+            left: '左悬浮',
+            right: '右悬浮',
+        },
+        alignType: {
+            left: '左对齐',
+            center: '居中',
+            right: '右对齐',
+        },
+        renderType: {
+            normal: '常规',
+            tag: '标签',
+            link: '链接',
+            image: '图片',
+        },
+    },
+    dataTableActions: {
+        title: '操作按钮',
+        preview: '预览',
+        id: 'ID',
+        label: '名称',
+        type: '类型',
+        size: '大小',
+        decorate: '修饰',
+        hide: '隐藏',
+        callback: '回调',
+        operation: '操作',
+        add: '添加',
+        placeholder: '请选择',
+        typeOptions: {
+            primary: '重要',
+            success: '成功',
+            warning: '警告',
+            danger: '危险',
+            info: '提示',
+        },
+        sizeOptions: {
+            large: '大',
+            default: '默认',
+            small: '小',
+        },
+        decorateOptions: {
+            text: '文字',
+            round: '圆角',
+            plain: '朴素',
+            disabled: '禁用',
+        },
+        callbackType: {
+            disabled: '禁用',
+            hidden: '隐藏',
+            click: '点击',
+        },
+    },
+    dataTableFilter: {
+        title: '筛选',
+        source: '数据来源',
+        options: '选项',
+        label: '名称',
+        value: '值',
+        add: '添加',
+    },
     tableOptions: {
         handle: '操作',
         add: '添加',
@@ -741,6 +828,42 @@ const ZhCn = {
                 funnel: '漏斗图',
             }
         },
+        fcDataTable: {
+            name: '数据表格',
+            props: {
+                data: '数据',
+                columns: '列配置',
+                actions: '操作按钮',
+                actionLabel: '操作列标题',
+                actionWidth: '操作列宽度',
+                actionFixed: '操作列固定',
+                border: '是否显示边框',
+                stripe: '是否斑马纹',
+                showIndex: '是否显示序号列',
+                selection: '是否显示多选列',
+                highlightCurrentRow: '是否高亮当前行',
+                size: '尺寸',
+                pagination: '是否分页',
+                remotePagination: '是否远程分页',
+                pageSize: '每页条数',
+                total: '总条数',
+                height: '表格高度',
+                maxHeight: '表格最大高度',
+                emptyText: '空数据时显示的文本内容',
+                rowKey: '行数据的Key',
+            },
+            sizes: {
+                default: '默认',
+                large: '大',
+                small: '小',
+            },
+            fixedType: {
+                normal: '不固定',
+                left: '靠左',
+                right: '靠右',
+            },
+            actionDefault: '操作'
+        },
         elImage: {
             name: '图片',
             props: {
@@ -1071,4 +1194,3 @@ const ZhCn = {
 };
 
 export default ZhCn;
-

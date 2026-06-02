@@ -106,6 +106,93 @@ const En = {
         required: 'Is it required',
         rule: 'Validation',
     },
+    dataTableColumns: {
+        title: 'Columns',
+        prop: 'Field',
+        label: 'Label',
+        width: 'Width',
+        filter: 'Filter',
+        className: 'Class',
+        sort: 'Sort',
+        overflow: 'Overflow',
+        fixed: 'Position',
+        align: 'Align',
+        render: 'Render',
+        hide: 'Hide',
+        operation: 'Operation',
+        add: 'Add',
+        placeholder: 'Please select',
+        sortType: {
+            none: 'No sort',
+            normal: 'Normal sort',
+            remote: 'Remote sort',
+        },
+        overflowType: {
+            default: 'Default',
+            tooltip: 'Tooltip',
+        },
+        fixedType: {
+            normal: 'Normal',
+            left: 'Fixed left',
+            right: 'Fixed right',
+        },
+        alignType: {
+            left: 'Left',
+            center: 'Center',
+            right: 'Right',
+        },
+        renderType: {
+            normal: 'Normal',
+            tag: 'Tag',
+            link: 'Link',
+            image: 'Image',
+        },
+    },
+    dataTableActions: {
+        title: 'Actions',
+        preview: 'Preview',
+        id: 'ID',
+        label: 'Label',
+        type: 'Type',
+        size: 'Size',
+        decorate: 'Decorate',
+        hide: 'Hide',
+        callback: 'Callback',
+        operation: 'Operation',
+        add: 'Add',
+        placeholder: 'Please select',
+        typeOptions: {
+            primary: 'Primary',
+            success: 'Success',
+            warning: 'Warning',
+            danger: 'Danger',
+            info: 'Info',
+        },
+        sizeOptions: {
+            large: 'Large',
+            default: 'Default',
+            small: 'Small',
+        },
+        decorateOptions: {
+            text: 'Text',
+            round: 'Round',
+            plain: 'Plain',
+            disabled: 'Disabled',
+        },
+        callbackType: {
+            disabled: 'Disabled',
+            hidden: 'Hidden',
+            click: 'Click',
+        },
+    },
+    dataTableFilter: {
+        title: 'Filter',
+        source: 'Source',
+        options: 'Options',
+        label: 'Label',
+        value: 'Value',
+        add: 'Add',
+    },
     tableOptions: {
         handle: 'Operation',
         add: 'Add',
@@ -741,6 +828,42 @@ const En = {
                 funnel: 'Funnel',
             }
         },
+        fcDataTable: {
+            name: 'Data Table',
+            props: {
+                data: 'Data',
+                columns: 'Columns',
+                actions: 'Actions',
+                actionLabel: 'Action column label',
+                actionWidth: 'Action column width',
+                actionFixed: 'Action column fixed',
+                border: 'Border',
+                stripe: 'Stripe',
+                showIndex: 'Show index column',
+                selection: 'Show selection column',
+                highlightCurrentRow: 'Highlight current row',
+                size: 'Size',
+                pagination: 'Pagination',
+                remotePagination: 'Remote pagination',
+                pageSize: 'Page size',
+                total: 'Total',
+                height: 'Height',
+                maxHeight: 'Max height',
+                emptyText: 'Empty text',
+                rowKey: 'Row key',
+            },
+            sizes: {
+                default: 'Default',
+                large: 'Large',
+                small: 'Small',
+            },
+            fixedType: {
+                normal: 'Normal',
+                left: 'Left',
+                right: 'Right',
+            },
+            actionDefault: 'Actions'
+        },
         elImage: {
             name: 'Image',
             props: {
@@ -1069,4 +1192,3 @@ const En = {
 };
 
 export default En;
-
