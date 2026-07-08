@@ -1131,8 +1131,26 @@ export default defineComponent({
                 }
                 delete options._event;
                 const globalDataItems = (options._globalData && options._globalData._items) || [];
+                const globalDataItemMap = {};
+                globalDataItems.forEach(item => {
+                    if (item && item.name) {
+                        globalDataItemMap[item.name] = item;
+                    }
+                });
                 // Scan rules for effect.globalData bindings (component → data source)
                 const globalDataBindings = {};
+                const resolveGlobalDataAutoSync = (gd, dataName) => {
+                    if (gd && typeof gd === 'object') {
+                        if (Object.prototype.hasOwnProperty.call(gd, 'autoSync')) {
+                            return gd.autoSync === true;
+                        }
+                        if (Object.prototype.hasOwnProperty.call(gd, 'sync')) {
+                            return gd.sync === true;
+                        }
+                    }
+                    const item = globalDataItemMap[dataName];
+                    return !!(item && item.autoSync === true);
+                };
                 const scanGlobalDataBindings = (children) => {
                     children && children.forEach(rule => {
                         if (typeof rule === 'string') return;
@@ -1150,7 +1168,11 @@ export default defineComponent({
                             const toPath = typeof gd === 'object' ? (gd.to || 'options') : 'options';
                             if (dataName) {
                                 if (!globalDataBindings[dataName]) globalDataBindings[dataName] = [];
-                                globalDataBindings[dataName].push({field: rule.field, to: toPath});
+                                globalDataBindings[dataName].push({
+                                    field: rule.field,
+                                    to: toPath,
+                                    autoSync: resolveGlobalDataAutoSync(gd, dataName),
+                                });
                             }
                         }
                         if (rule.children) {
@@ -1163,23 +1185,137 @@ export default defineComponent({
                     const stripFnWrapperGD = (str) => {
                         return normalizeFnSource(str);
                     };
-                    const makeBindingCode = (dataName) => {
-                        const bindings = globalDataBindings[dataName];
-                        if (!bindings || !bindings.length) return '';
-                        return bindings.map(({field, to}) => {
-                            const setPath = to.indexOf('props.') === 0
-                                ? `.props.${to.slice(6)}`
-                                : `.${to}`;
-                            return `        var _rule = api.getRule(${JSON.stringify(field)}); if(_rule) _rule${setPath} = api.globalData[${JSON.stringify(dataName)}];`;
-                        }).join('\n');
+                    const globalDataBindingMeta = {};
+                    Object.keys(globalDataBindings).forEach(dataName => {
+                        globalDataBindingMeta[dataName] = globalDataBindings[dataName].map(binding => ({
+                            field: binding.field,
+                            to: binding.to,
+                            autoSync: binding.autoSync === true,
+                        }));
+                    });
+                    const makeGlobalDataRuntimeCode = () => {
+                        const bindingMeta = JSON.stringify(globalDataBindingMeta);
+                        const configuredNames = JSON.stringify(globalDataItems.map(item => item && item.name).filter(Boolean));
+                        return [
+                            '    api.globalData = api.globalData || {};',
+                            '    (function(){',
+                            '        var _store = {};',
+                            '        var _watchers = {};',
+                            '        var _defined = {};',
+                            '        var _silent = false;',
+                            `        var _bindings = ${bindingMeta};`,
+                            `        var _configuredNames = ${configuredNames};`,
+                            '        api.globalDataBindings = _bindings;',
+                            '        var _publish = function(name, value) {',
+                            '            var list = _watchers[name] || [];',
+                            '            list.slice().forEach(function(handler){',
+                            '                try { handler(value, name); } catch (e) { console.error(e); }',
+                            '            });',
+                            '        };',
+                            '        var _define = function(name, value) {',
+                            '            if (!name) return;',
+                            '            if (_defined[name]) {',
+                            '                _store[name] = value;',
+                            '                return;',
+                            '            }',
+                            '            _store[name] = value;',
+                            '            try {',
+                            '                Object.defineProperty(api.globalData, name, {',
+                            '                    configurable: true,',
+                            '                    enumerable: true,',
+                            '                    get: function(){ return _store[name]; },',
+                            '                    set: function(value){',
+                            '                        _store[name] = value;',
+                            '                        if (!_silent) _publish(name, value);',
+                            '                    }',
+                            '                });',
+                            '                _defined[name] = true;',
+                            '            } catch (e) {',
+                            '                api.globalData[name] = value;',
+                            '            }',
+                            '        };',
+                            '        var _splitPath = function(path) {',
+                            "            return String(path || 'options').split('.').filter(function(item){ return !!item; });",
+                            '        };',
+                            '        var _applyBindings = function(name, value, autoOnly) {',
+                            '            var list = _bindings[name] || [];',
+                            '            list.forEach(function(binding){',
+                            '                if (!autoOnly || binding.autoSync === true) {',
+                            '                    api.applyGlobalDataBinding(binding, value);',
+                            '                }',
+                            '            });',
+                            '        };',
+                            '        api.defineGlobalData = function(name, value) {',
+                            '            _define(name, value);',
+                            '            return api.globalData[name];',
+                            '        };',
+                            '        api.setGlobalData = function(name, value, options) {',
+                            '            _define(name, _store[name]);',
+                            '            _silent = true;',
+                            '            try { api.globalData[name] = value; } finally { _silent = false; }',
+                            '            if (!options || options.silent !== true) _publish(name, value);',
+                            '            return value;',
+                            '        };',
+                            '        api.updateGlobalData = function(name, updater, options) {',
+                            '            var value = api.globalData[name];',
+                            "            var next = typeof updater === 'function' ? updater(value, api) : updater;",
+                            '            return api.setGlobalData(name, next, options);',
+                            '        };',
+                            '        api.subscribeGlobalData = function(name, handler, immediate) {',
+                            "            if (typeof handler !== 'function') return function(){};",
+                            '            (_watchers[name] || (_watchers[name] = [])).push(handler);',
+                            '            if (immediate === true) handler(api.globalData[name], name);',
+                            '            return function(){',
+                            '                var list = _watchers[name] || [];',
+                            '                var index = list.indexOf(handler);',
+                            '                if (index > -1) list.splice(index, 1);',
+                            '            };',
+                            '        };',
+                            '        api.applyGlobalDataBinding = function(binding, value) {',
+                            "            if (!binding || !binding.field || typeof api.getRule !== 'function') return;",
+                            '            var rule = api.getRule(binding.field);',
+                            '            if (!rule) return;',
+                            "            var path = _splitPath(binding.to || 'options');",
+                            '            var target = rule;',
+                            "            if (path[0] === 'props') {",
+                            '                rule.props = rule.props || {};',
+                            '                target = rule.props;',
+                            '                path.shift();',
+                            '            }',
+                            '            if (!path.length) return;',
+                            '            for (var i = 0; i < path.length - 1; i++) {',
+                            '                var key = path[i];',
+                            "                if (!target[key] || typeof target[key] !== 'object') target[key] = {};",
+                            '                target = target[key];',
+                            '            }',
+                            '            target[path[path.length - 1]] = value;',
+                            "            if (typeof api.sync === 'function') api.sync(rule);",
+                            '        };',
+                            '        api.refreshGlobalDataBindings = function(name, options) {',
+                            '            var autoOnly = options && options.autoOnly === true;',
+                            '            if (name) {',
+                            '                _applyBindings(name, api.globalData[name], autoOnly);',
+                            '                return;',
+                            '            }',
+                            '            Object.keys(_bindings).forEach(function(key){',
+                            '                _applyBindings(key, api.globalData[key], autoOnly);',
+                            '            });',
+                            '        };',
+                            '        Object.keys(_bindings).forEach(function(name){',
+                            '            api.subscribeGlobalData(name, function(value){',
+                            '                _applyBindings(name, value, true);',
+                            '            });',
+                            '        });',
+                            '        _configuredNames.forEach(function(name){',
+                            '            _define(name, api.globalData[name]);',
+                            '        });',
+                            '    })();',
+                        ].join('\n');
                     };
                     const globalDataCode = globalDataItems.map(item => {
-                        const bindCode = makeBindingCode(item.name);
                         if (item.type === 'static') {
                             const data = item.data || '{}';
-                            let code = `        api.globalData[${JSON.stringify(item.name)}] = ${data};`;
-                            if (bindCode) code += '\n' + bindCode;
-                            return code;
+                            return `        api.setGlobalData(${JSON.stringify(item.name)}, ${data}, {silent: true});\n        api.refreshGlobalDataBindings(${JSON.stringify(item.name)});`;
                         } else {
                             const fetch = item.fetch || {};
                             const fetchOption = deepCopy(fetch);
@@ -1189,21 +1325,20 @@ export default defineComponent({
                             const parseFn = fetch.parse ? stripFnWrapperGD(fetch.parse) : '';
                             const onError = fetch.onError ? stripFnWrapperGD(fetch.onError) : '';
                             const dataValue = parseFn ? `(${parseFn})(res, null, api)` : 'res';
-                            let thenBody = `return Promise.resolve(${dataValue}).then(function(data){ api.globalData[${JSON.stringify(item.name)}] = data;`;
-                            if (bindCode) thenBody += '\n' + bindCode.replace(/        /g, '    ');
-                            thenBody += '\n    return data;\n});';
+                            const thenBody = `return Promise.resolve(${dataValue}).then(function(data){\n    api.setGlobalData(${JSON.stringify(item.name)}, data, {silent: true});\n    api.refreshGlobalDataBindings(${JSON.stringify(item.name)});\n    return data;\n});`;
                             const catchBody = onError
                                 ? `(${onError})(e, api);`
                                 : 'console.error(e);';
                             return `        api.fetch(${fetchConfig}).then(function(res){ ${thenBody} }).catch(function(e){ ${catchBody} });`;
                         }
                     }).join('\n');
+                    const globalDataRuntimeCode = makeGlobalDataRuntimeCode();
                     const existingMounted = options.onMounted ? stripFnWrapperGD(options.onMounted) : '';
                     let mountedBody;
                     if (existingMounted) {
-                        mountedBody = `function onMounted(api) {\n    api.globalData = api.globalData || {};\n${globalDataCode}\n        (${existingMounted}).call(this, api);\n    }`;
+                        mountedBody = `function onMounted(api) {\n${globalDataRuntimeCode}\n${globalDataCode}\n        (${existingMounted}).call(this, api);\n    }`;
                     } else {
-                        mountedBody = `function onMounted(api) {\n    api.globalData = api.globalData || {};\n${globalDataCode}\n    }`;
+                        mountedBody = `function onMounted(api) {\n${globalDataRuntimeCode}\n${globalDataCode}\n    }`;
                     }
                     options.onMounted = FN_PREFIX + mountedBody + FN_SUFFIX;
                     options._globalDataItems = globalDataItems;

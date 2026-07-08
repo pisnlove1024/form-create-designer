@@ -181,7 +181,7 @@ export default {
             return getShowcaseRule(this.lang);
         },
         getDefaultOption() {
-            return getShowcaseOption();
+            return getShowcaseOption(this.lang);
         },
         goPro() {
             location.href = 'https://pro.form-create.com/view';

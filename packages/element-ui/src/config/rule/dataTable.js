@@ -14,6 +14,33 @@ const defaultData = [
     {name: '示例B', status: 0},
 ];
 
+const defaultCursorPagination = {
+    enabled: false,
+    preset: 'nextCursorHasMore',
+    autoLoad: false,
+    fetch: {},
+    request: {
+        cursorPath: '',
+        pageSizePath: '',
+        pageSize: 0,
+        initialCursor: '',
+        emptyCursorBehavior: 'omit',
+    },
+    response: {
+        rowsPath: '',
+        nextCursorPath: '',
+        hasMorePath: '',
+        prevCursorPath: '',
+        totalPath: '',
+    },
+    labels: {
+        prev: '',
+        next: '',
+    },
+};
+
+const makeDefaultCursorPagination = () => JSON.parse(JSON.stringify(defaultCursorPagination));
+
 export default {
     menu: 'main',
     icon: 'icon-table',
@@ -21,7 +48,7 @@ export default {
     name,
     input: false,
     mask: true,
-    event: ['selectionChange', 'sortChange', 'filterChange', 'pageChange', 'rowClick', 'linkClick', 'actionClick'],
+    event: ['selectionChange', 'sortChange', 'filterChange', 'pageChange', 'cursorPageChange', 'rowClick', 'linkClick', 'actionClick'],
     rule({t}) {
         return {
             type: name,
@@ -46,6 +73,7 @@ export default {
                 remotePagination: false,
                 pageSize: 10,
                 total: 0,
+                cursorPagination: makeDefaultCursorPagination(),
                 height: '',
                 maxHeight: '',
                 emptyText: '',
@@ -211,6 +239,123 @@ export default {
                                 title: t('com.fcDataTable.props.total'),
                                 value: 0,
                                 props: {min: 0}
+                            }
+                        ]
+                    }
+                ]
+            },
+            {
+                type: 'switch',
+                field: 'cursorPagination>enabled',
+                title: t('com.fcDataTable.props.cursorPagination'),
+                warning: t('com.fcDataTable.cursorPaginationInfo'),
+                control: [
+                    {
+                        value: true,
+                        rule: [
+                            {
+                                type: 'select',
+                                field: 'cursorPagination>preset',
+                                title: t('com.fcDataTable.props.cursorPreset'),
+                                value: 'nextCursorHasMore',
+                                options: localeOptions(t, [
+                                    {label: 'nextCursorHasMore', value: 'nextCursorHasMore'},
+                                    {label: 'nextCursorOnly', value: 'nextCursorOnly'},
+                                    {label: 'pageToken', value: 'pageToken'},
+                                    {label: 'offsetLimit', value: 'offsetLimit'},
+                                ], 'com.fcDataTable.cursorPresets'),
+                                warning: t('com.fcDataTable.cursorPresetInfo'),
+                            },
+                            {
+                                type: 'FetchConfig',
+                                field: 'cursorPagination>fetch',
+                                title: t('com.fcDataTable.props.cursorFetch'),
+                                warning: t('com.fcDataTable.cursorFetchInfo'),
+                            },
+                            {
+                                type: 'switch',
+                                field: 'cursorPagination>autoLoad',
+                                title: t('com.fcDataTable.props.cursorAutoLoad'),
+                            },
+                            {
+                                type: 'input',
+                                field: 'cursorPagination>request>cursorPath',
+                                title: t('com.fcDataTable.props.cursorRequestPath'),
+                                warning: t('com.fcDataTable.cursorRequestPathInfo'),
+                            },
+                            {
+                                type: 'inputNumber',
+                                field: 'cursorPagination>request>pageSize',
+                                title: t('com.fcDataTable.props.cursorPageSize'),
+                                value: 0,
+                                props: {min: 0},
+                                warning: t('com.fcDataTable.cursorPageSizeInfo'),
+                            },
+                            {
+                                type: 'input',
+                                field: 'cursorPagination>request>pageSizePath',
+                                title: t('com.fcDataTable.props.cursorPageSizePath'),
+                                warning: t('com.fcDataTable.cursorPageSizePathInfo'),
+                            },
+                            {
+                                type: 'select',
+                                field: 'cursorPagination>request>emptyCursorBehavior',
+                                title: t('com.fcDataTable.props.cursorEmptyCursorBehavior'),
+                                value: 'omit',
+                                options: localeOptions(t, [
+                                    {label: 'omit', value: 'omit'},
+                                    {label: 'keep', value: 'keep'},
+                                    {label: 'null', value: 'null'},
+                                ], 'com.fcDataTable.emptyCursorBehavior'),
+                                warning: t('com.fcDataTable.cursorEmptyCursorBehaviorInfo'),
+                            },
+                            {
+                                type: 'input',
+                                field: 'cursorPagination>request>initialCursor',
+                                title: t('com.fcDataTable.props.cursorInitialCursor'),
+                                warning: t('com.fcDataTable.cursorInitialCursorInfo'),
+                            },
+                            {
+                                type: 'input',
+                                field: 'cursorPagination>response>rowsPath',
+                                title: t('com.fcDataTable.props.cursorDataPath'),
+                                warning: t('com.fcDataTable.cursorDataPathInfo'),
+                            },
+                            {
+                                type: 'input',
+                                field: 'cursorPagination>response>nextCursorPath',
+                                title: t('com.fcDataTable.props.cursorNextPath'),
+                                warning: t('com.fcDataTable.cursorNextPathInfo'),
+                            },
+                            {
+                                type: 'input',
+                                field: 'cursorPagination>response>hasMorePath',
+                                title: t('com.fcDataTable.props.cursorHasMorePath'),
+                                warning: t('com.fcDataTable.cursorHasMorePathInfo'),
+                            },
+                            {
+                                type: 'input',
+                                field: 'cursorPagination>response>prevCursorPath',
+                                title: t('com.fcDataTable.props.cursorPrevPath'),
+                                warning: t('com.fcDataTable.cursorPrevPathInfo'),
+                            },
+                            {
+                                type: 'input',
+                                field: 'cursorPagination>response>totalPath',
+                                title: t('com.fcDataTable.props.cursorTotalPath'),
+                                warning: t('com.fcDataTable.cursorTotalPathInfo'),
+                            },
+                            {
+                                type: 'input',
+                                field: 'cursorPagination>labels>prev',
+                                title: t('com.fcDataTable.props.cursorPrevLabel'),
+                                warning: t('com.fcDataTable.cursorPrevLabelInfo'),
+                            },
+                            {
+                                type: 'input',
+                                field: 'cursorPagination>labels>next',
+                                title: t('com.fcDataTable.props.cursorNextLabel'),
+                                warning: t('com.fcDataTable.cursorNextLabelInfo'),
                             }
                         ]
                     }

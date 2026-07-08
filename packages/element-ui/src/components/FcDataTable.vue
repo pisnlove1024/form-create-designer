@@ -2,8 +2,8 @@
     <div class="_fc-data-table">
         <el-table
             ref="table"
-            v-loading="filterLoading > 0"
-            :data="pagedData"
+            v-loading="filterLoading > 0 || cursorLoading"
+            :data="displayData"
             :border="border"
             :stripe="stripe"
             :size="size || 'default'"
@@ -62,7 +62,7 @@
                 </template>
             </el-table-column>
         </el-table>
-        <div v-if="pagination" class="_fc-data-table-pager">
+        <div v-if="pagination && !cursorEnabled" class="_fc-data-table-pager">
             <el-pagination
                 small
                 :current-page="currentPage"
@@ -73,6 +73,14 @@
                 @current-change="onPageChange"
                 @size-change="onSizeChange"/>
         </div>
+        <div v-if="cursorEnabled && (canCursorPrev || canCursorNext || cursorLoading)" class="_fc-data-table-cursor-pager">
+            <el-button v-if="canCursorPrev" size="small" :disabled="cursorLoading" @click="loadCursorPrev">
+                {{ cursorPrevLabel }}
+            </el-button>
+            <el-button v-if="canCursorNext || cursorLoading" size="small" type="primary" :disabled="cursorLoading || !canCursorNext" @click="loadCursorNext">
+                {{ cursorNextLabel }}
+            </el-button>
+        </div>
     </div>
 </template>
 
@@ -81,7 +89,7 @@ import {defineComponent} from 'vue';
 
 export default defineComponent({
     name: 'FcDataTable',
-    emits: ['selectionChange', 'sortChange', 'filterChange', 'pageChange', 'rowClick', 'linkClick', 'actionClick'],
+    emits: ['selectionChange', 'sortChange', 'filterChange', 'pageChange', 'cursorPageChange', 'rowClick', 'linkClick', 'actionClick'],
     props: {
         formCreateInject: Object,
         data: {
@@ -149,12 +157,23 @@ export default defineComponent({
             type: Number,
             default: 0,
         },
+        cursorPagination: {
+            type: [Object, Boolean],
+            default: () => ({}),
+        },
     },
     data() {
         return {
             currentPage: 1,
             innerPageSize: this.pageSize || 10,
             filterLoading: 0,
+            cursorLoading: false,
+            cursorRows: Array.isArray(this.data) ? this.data.slice() : [],
+            cursorHasMore: false,
+            cursorNextCursor: '',
+            cursorPrevCursor: '',
+            cursorCurrentCursor: '',
+            cursorCursorStack: [],
             filterOptions: {},
             // 自管的筛选/排序状态，作用于全量数据（修复分页只对当页排序/筛选的问题）
             filterState: {},
@@ -179,8 +198,32 @@ export default defineComponent({
         filterSignature() {
             return JSON.stringify((this.columns || []).map(col => ({p: col.prop, f: col.filter})));
         },
+        cursorConfig() {
+            return this.normalizeCursorConfig(this.cursorPagination);
+        },
+        cursorEnabled() {
+            return this.cursorConfig.enabled === true;
+        },
+        cursorRequestConfig() {
+            return this.cursorConfig.request || {};
+        },
+        cursorResponseConfig() {
+            return this.cursorConfig.response || {};
+        },
+        cursorLabels() {
+            return this.cursorConfig.labels || {};
+        },
+        cursorAutoLoad() {
+            return this.cursorConfig.autoLoad === true;
+        },
+        cursorInitialCursorValue() {
+            return this.cursorRequestConfig.initialCursor;
+        },
+        sourceData() {
+            return this.cursorEnabled ? this.cursorRows : (this.data || []);
+        },
         filteredData() {
-            let list = this.data || [];
+            let list = this.sourceData;
             const state = this.filterState;
             Object.keys(state).forEach(prop => {
                 const vals = state[prop];
@@ -202,6 +245,9 @@ export default defineComponent({
         displayTotal() {
             return this.remotePagination ? (Number(this.total) || 0) : this.sortedData.length;
         },
+        displayData() {
+            return this.cursorEnabled ? this.sortedData : this.pagedData;
+        },
         pagedData() {
             const list = this.sortedData;
             if (!this.pagination || this.remotePagination) {
@@ -216,8 +262,34 @@ export default defineComponent({
             const size = this.innerPageSize || 10;
             return base.indexOf(size) > -1 ? base : [size, ...base].sort((a, b) => a - b);
         },
+        canCursorPrev() {
+            return this.hasCursorValue(this.cursorPrevCursor) || this.cursorCursorStack.length > 0;
+        },
+        canCursorNext() {
+            return this.cursorHasMore && this.hasCursorValue(this.cursorNextCursor);
+        },
+        cursorPrevLabel() {
+            return this.cursorLabels.prev || this.translate('cursorPrev', '上一页');
+        },
+        cursorNextLabel() {
+            return this.cursorLabels.next || this.translate('cursorNext', '下一页');
+        },
     },
     watch: {
+        data(v) {
+            if (this.cursorEnabled && !this.cursorAutoLoad) {
+                this.cursorRows = Array.isArray(v) ? v.slice() : [];
+            }
+        },
+        cursorPagination: {
+            deep: true,
+            handler() {
+                this.resetCursorState();
+                if (this.cursorEnabled && this.cursorAutoLoad) {
+                    this.loadCursorFirst();
+                }
+            },
+        },
         displayTotal() {
             const maxPage = Math.max(1, Math.ceil(this.displayTotal / (this.innerPageSize || 10)));
             if (this.currentPage > maxPage) {
@@ -235,8 +307,15 @@ export default defineComponent({
     },
     mounted() {
         this.resolveFilters();
+        if (this.cursorEnabled && this.cursorAutoLoad) {
+            this.loadCursorFirst();
+        }
     },
     methods: {
+        translate(key, fallback) {
+            const t = this.formCreateInject && this.formCreateInject.t;
+            return (typeof t === 'function' && t('com.fcDataTable.' + key)) || fallback;
+        },
         onPageChange(page) {
             this.currentPage = page;
             this.$emit('pageChange', {page, pageSize: this.innerPageSize});
@@ -275,6 +354,276 @@ export default defineComponent({
         },
         looseEq(a, b) {
             return a === b || String(a) === String(b);
+        },
+        isObject(value) {
+            return value && Object.prototype.toString.call(value) === '[object Object]';
+        },
+        defaultCursorConfig() {
+            return {
+                enabled: false,
+                preset: 'nextCursorHasMore',
+                autoLoad: false,
+                fetch: {},
+                request: {
+                    cursorPath: '',
+                    pageSizePath: '',
+                    pageSize: 0,
+                    initialCursor: '',
+                    emptyCursorBehavior: 'omit',
+                },
+                response: {
+                    rowsPath: '',
+                    nextCursorPath: '',
+                    hasMorePath: '',
+                    prevCursorPath: '',
+                    totalPath: '',
+                },
+                labels: {
+                    prev: '',
+                    next: '',
+                },
+            };
+        },
+        cursorPresetConfig(preset) {
+            const presets = {
+                nextCursorHasMore: {
+                    request: {
+                        cursorPath: 'data.cursor',
+                    },
+                    response: {
+                        rowsPath: 'rows',
+                        nextCursorPath: 'next_cursor',
+                        hasMorePath: 'has_more',
+                    },
+                },
+                nextCursorOnly: {
+                    request: {
+                        cursorPath: 'data.cursor',
+                    },
+                    response: {
+                        rowsPath: 'rows',
+                        nextCursorPath: 'next_cursor',
+                        hasMorePath: '',
+                    },
+                },
+                pageToken: {
+                    request: {
+                        cursorPath: 'query.pageToken',
+                    },
+                    response: {
+                        rowsPath: 'data.items',
+                        nextCursorPath: 'data.nextPageToken',
+                        hasMorePath: '',
+                    },
+                },
+                offsetLimit: {
+                    request: {
+                        cursorPath: 'query.offset',
+                        pageSizePath: 'query.limit',
+                        pageSize: 20,
+                        initialCursor: 0,
+                        emptyCursorBehavior: 'keep',
+                    },
+                    response: {
+                        rowsPath: 'rows',
+                        nextCursorPath: 'next_cursor',
+                        hasMorePath: 'has_more',
+                    },
+                },
+            };
+            return presets[preset] || presets.nextCursorHasMore;
+        },
+        clone(value) {
+            if (Array.isArray(value)) {
+                return value.map(item => this.clone(item));
+            }
+            if (this.isObject(value)) {
+                const ret = {};
+                Object.keys(value).forEach(key => {
+                    ret[key] = this.clone(value[key]);
+                });
+                return ret;
+            }
+            return value;
+        },
+        mergeObject(base, source, skipEmptyString = false) {
+            const ret = this.clone(base);
+            if (!this.isObject(source)) {
+                return ret;
+            }
+            Object.keys(source).forEach(key => {
+                if (this.isObject(ret[key]) && this.isObject(source[key])) {
+                    ret[key] = this.mergeObject(ret[key], source[key], skipEmptyString);
+                } else if (source[key] !== undefined && (!skipEmptyString || source[key] !== '')) {
+                    ret[key] = this.clone(source[key]);
+                }
+            });
+            return ret;
+        },
+        normalizeCursorConfig(value) {
+            const base = this.defaultCursorConfig();
+            if (value === true) {
+                base.enabled = true;
+                return this.mergeObject(base, this.cursorPresetConfig(base.preset));
+            }
+            const source = this.isObject(value) ? value : {};
+            const presetName = source.preset || base.preset;
+            const config = this.mergeObject(this.mergeObject(base, this.cursorPresetConfig(presetName)), source, true);
+            config.enabled = config.enabled === true;
+            config.preset = presetName;
+            return config;
+        },
+        pathParts(path) {
+            return String(path || '').split('.').filter(Boolean);
+        },
+        getByPath(target, path, defaultValue) {
+            const parts = this.pathParts(path);
+            if (!parts.length) {
+                return target === undefined ? defaultValue : target;
+            }
+            let value = target;
+            for (let i = 0; i < parts.length; i++) {
+                if (value == null) {
+                    return defaultValue;
+                }
+                value = value[parts[i]];
+            }
+            return value === undefined ? defaultValue : value;
+        },
+        setByPath(target, path, value) {
+            const parts = this.pathParts(path);
+            if (!parts.length) {
+                return;
+            }
+            let cur = target;
+            for (let i = 0; i < parts.length - 1; i++) {
+                const key = parts[i];
+                if (!this.isObject(cur[key])) {
+                    cur[key] = {};
+                }
+                cur = cur[key];
+            }
+            cur[parts[parts.length - 1]] = value;
+        },
+        deleteByPath(target, path) {
+            const parts = this.pathParts(path);
+            if (!parts.length) {
+                return;
+            }
+            let cur = target;
+            for (let i = 0; i < parts.length - 1; i++) {
+                cur = cur && cur[parts[i]];
+                if (cur == null) {
+                    return;
+                }
+            }
+            if (cur && Object.prototype.hasOwnProperty.call(cur, parts[parts.length - 1])) {
+                delete cur[parts[parts.length - 1]];
+            }
+        },
+        normalizeBoolean(value) {
+            return value === true || value === 1 || value === '1' || value === 'true';
+        },
+        hasCursorValue(value) {
+            return value !== undefined && value !== null && value !== '';
+        },
+        makeCursorFetchConfig(cursor) {
+            const fetchConfig = this.cursorConfig.fetch;
+            if (!fetchConfig || typeof fetchConfig !== 'object') {
+                return null;
+            }
+            const config = this.clone(fetchConfig);
+            if (!Object.keys(config).length) {
+                return null;
+            }
+            const request = this.cursorRequestConfig;
+            const cursorPath = request.cursorPath;
+            if (cursorPath) {
+                if (!this.hasCursorValue(cursor)) {
+                    if (request.emptyCursorBehavior === 'keep') {
+                        this.setByPath(config, cursorPath, '');
+                    } else if (request.emptyCursorBehavior === 'null') {
+                        this.setByPath(config, cursorPath, null);
+                    } else {
+                        this.deleteByPath(config, cursorPath);
+                    }
+                } else {
+                    this.setByPath(config, cursorPath, cursor);
+                }
+            }
+            if (request.pageSizePath && Number(request.pageSize) > 0) {
+                this.setByPath(config, request.pageSizePath, Number(request.pageSize));
+            }
+            return config;
+        },
+        resetCursorState() {
+            this.cursorRows = Array.isArray(this.data) ? this.data.slice() : [];
+            this.cursorHasMore = false;
+            this.cursorNextCursor = '';
+            this.cursorPrevCursor = '';
+            this.cursorCurrentCursor = this.cursorInitialCursorValue || '';
+            this.cursorCursorStack = [];
+        },
+        loadCursorFirst() {
+            return this.loadCursorPage(this.cursorInitialCursorValue || '', [], 'first');
+        },
+        loadCursorNext() {
+            if (!this.canCursorNext || this.cursorLoading) {
+                return undefined;
+            }
+            return this.loadCursorPage(this.cursorNextCursor, this.cursorCursorStack.concat([this.cursorCurrentCursor || '']), 'next');
+        },
+        loadCursorPrev() {
+            if (!this.canCursorPrev || this.cursorLoading) {
+                return undefined;
+            }
+            const stack = this.cursorCursorStack.slice();
+            const cursor = this.hasCursorValue(this.cursorPrevCursor) ? this.cursorPrevCursor : stack.pop();
+            if (stack.length && cursor === stack[stack.length - 1]) {
+                stack.pop();
+            }
+            return this.loadCursorPage(cursor || '', stack, 'prev');
+        },
+        loadCursorPage(cursor, stack, direction) {
+            const api = this.formCreateInject && this.formCreateInject.api;
+            const fetchConfig = this.makeCursorFetchConfig(cursor);
+            if (!api || typeof api.fetch !== 'function' || !fetchConfig) {
+                return undefined;
+            }
+            this.cursorLoading = true;
+            return api.fetch(fetchConfig)
+                .then(res => {
+                    const response = this.cursorResponseConfig;
+                    const rows = this.getByPath(res, response.rowsPath, Array.isArray(res) ? res : []);
+                    const nextCursor = this.getByPath(res, response.nextCursorPath, '');
+                    const prevCursor = response.prevCursorPath ? this.getByPath(res, response.prevCursorPath, '') : '';
+                    const rawHasMore = response.hasMorePath ? this.getByPath(res, response.hasMorePath, undefined) : undefined;
+                    const total = response.totalPath ? this.getByPath(res, response.totalPath, undefined) : undefined;
+                    this.cursorRows = Array.isArray(rows) ? rows : [];
+                    this.cursorHasMore = rawHasMore === undefined ? this.hasCursorValue(nextCursor) : this.normalizeBoolean(rawHasMore);
+                    this.cursorNextCursor = nextCursor;
+                    this.cursorPrevCursor = prevCursor;
+                    this.cursorCurrentCursor = cursor || '';
+                    this.cursorCursorStack = Array.isArray(stack) ? stack.slice() : [];
+                    this.$emit('cursorPageChange', {
+                        direction,
+                        cursor: this.cursorCurrentCursor,
+                        nextCursor: this.cursorNextCursor,
+                        hasMore: this.cursorHasMore,
+                        page: this.cursorCursorStack.length + 1,
+                        rows: this.cursorRows,
+                        total,
+                        response: res,
+                    });
+                })
+                .catch(e => {
+                    // eslint-disable-next-line no-console
+                    console.warn('[FcDataTable] cursor page request failed:', e);
+                    this.$emit('cursorPageChange', {direction, cursor, error: e});
+                })
+                .finally(() => {
+                    this.cursorLoading = false;
+                });
         },
         filterEnabled(col) {
             return !!(col && col.prop && col.filter && typeof col.filter === 'object' && col.filter.type);
@@ -411,6 +760,13 @@ export default defineComponent({
 ._fc-data-table-pager {
     display: flex;
     justify-content: flex-end;
+    padding-top: 10px;
+}
+
+._fc-data-table-cursor-pager {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
     padding-top: 10px;
 }
 

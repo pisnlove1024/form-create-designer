@@ -29,7 +29,7 @@ const SHOWCASE_LANGUAGE = {
         performance: '绩效评分',
         notes: '备注',
         notesPlaceholder: '请输入备注信息',
-        globalDataAlert: '城市、职业、穿梭框、树、树选择和第二个图表都使用全局数据源，可在表单配置中统一维护。',
+        globalDataAlert: '城市、职业、穿梭框、树、树选择和第二个图表都使用全局数据源，可在表单配置中统一维护；chartChannel 开启了自动更新。',
         remoteDataAlert: '远程用户和远程待办使用公开 REST API，请在网络可用时查看请求结果；失败时组件会保留空数据。',
         city: '城市',
         cityPlaceholder: '请选择城市',
@@ -116,7 +116,7 @@ const SHOWCASE_LANGUAGE = {
         practiceGlobalDataTitle: '全局变量',
         practiceGlobalDataA: '城市、职业、穿梭框、树、树选择和饼图都从表单配置里的全局数据读取。',
         practiceGlobalDataB: '全局数据源支持静态数据和 fetch 数据，组件只关心 to 写到 options、props.options 或 props.chartData。',
-        practiceGlobalDataC: '导出时会自动扫描 effect.globalData 绑定关系，并在 onMounted 中回填到对应组件。',
+        practiceGlobalDataC: '导出时会自动扫描 effect.globalData 绑定关系，并在 onMounted 中回填到对应组件；数据源开启自动更新后，api.setGlobalData / api.updateGlobalData / api.globalData.xxx = value 会发布到绑定组件。',
         practiceGlobalEventTitle: '全局方法 / 自定义事件',
         practiceGlobalEventA: '按钮、选择器、树、TableForm、Group、SubForm、Code 都绑定了自定义事件。',
         practiceGlobalEventB: '事件统一注册到 api.globalEvent，组件事件只负责传递 field、value、source 等上下文。',
@@ -145,6 +145,12 @@ const SHOWCASE_LANGUAGE = {
         practiceDialogD: '注意：不要直接修改 rule.props.modelValue，因为有 field 的组件其 modelValue 由表单数据模型驱动，直接修改会被覆盖。',
         dataTableTab: '数据表格',
         dtTitle: '员工数据表',
+        dtCursorTitle: '远程游标分页表格',
+        dtGlobalDataTitle: '线上全局数据表格',
+        dtGlobalDataSelect: '线上待办选择',
+        dtGlobalDataSelectPlaceholder: '请选择线上待办',
+        dtGlobalDataRefresh: '刷新线上全局数据源',
+        dtGlobalDataAlert: '下面的表格和选择器都绑定 fetch 型全局数据源。点击按钮会重新请求线上接口并更新全局数据源，绑定组件会自动刷新。',
         dtAlert: '展示型数据表格：列渲染（标签/链接/图片）、筛选（静态/全局数据源）、排序、多选、分页、行点击与操作按钮回调全部可在配置面板中维护。',
         dtColId: '编号',
         dtColAvatar: '头像',
@@ -152,11 +158,16 @@ const SHOWCASE_LANGUAGE = {
         dtColCity: '城市',
         dtColStatus: '状态',
         dtColGrade: '评级',
+        dtColTaskTitle: '任务标题',
+        dtColUser: '用户',
+        dtColCompleted: '完成状态',
         dtCityBJ: '北京',
         dtCitySH: '上海',
         dtCityGZ: '广州',
         dtStatusActive: '在职',
         dtStatusLeft: '离职',
+        dtStatusTodo: '待处理',
+        dtStatusDone: '已完成',
         dtActionView: '查看',
         dtActionEdit: '编辑',
         dtActionDelete: '删除',
@@ -165,7 +176,7 @@ const SHOWCASE_LANGUAGE = {
         practiceDataTableA: '数据源：静态数据写入 props.data；远程 / 全局可用 effect.fetch / effect.globalData 把列表写入 props.data。',
         practiceDataTableB: '列渲染：render 支持 normal / tag / link / image；列筛选 filter 支持 static / global / fetch 三种数据源，选项结构统一为 {label, value}。',
         practiceDataTableC: '排序：normal 在组件内对全量数据排序；custom 仅抛出 sortChange 事件，由外部接口重新取数（与分页/筛选互不影响）。',
-        practiceDataTableD: '交互：操作按钮的 点击 / 禁用 / 隐藏 均为 (row, index) 回调；selectionChange / rowClick / linkClick / pageChange 等事件可对接全局方法。',
+        practiceDataTableD: '游标分页：cursorPagination 按 preset / request / response / labels 分组，常见接口先选预设，再按需覆盖路径。',
     },
     en: {
         demoTitle: 'Title',
@@ -192,7 +203,7 @@ const SHOWCASE_LANGUAGE = {
         performance: 'Performance',
         notes: 'Notes',
         notesPlaceholder: 'Enter notes',
-        globalDataAlert: 'City, occupation, transfer, tree, tree select, and the second chart are all driven by global data sources.',
+        globalDataAlert: 'City, occupation, transfer, tree, tree select, and the second chart are all driven by global data sources; chartChannel enables auto update.',
         remoteDataAlert: 'Remote users and remote todos use a public REST API. Data appears when the network is available.',
         city: 'City',
         cityPlaceholder: 'Select city',
@@ -279,7 +290,7 @@ const SHOWCASE_LANGUAGE = {
         practiceGlobalDataTitle: 'Global Data',
         practiceGlobalDataA: 'City, occupation, transfer, tree, tree select, and the pie chart all read from global data in form options.',
         practiceGlobalDataB: 'Global data supports static and fetch sources; components only care whether to writes to options, props.options, or props.chartData.',
-        practiceGlobalDataC: 'Export scans effect.globalData bindings and hydrates each target component in onMounted.',
+        practiceGlobalDataC: 'Export scans effect.globalData bindings and hydrates each target component in onMounted. When a data source enables auto update, api.setGlobalData / api.updateGlobalData / api.globalData.xxx = value publishes to bound components.',
         practiceGlobalEventTitle: 'Global Methods / Custom Events',
         practiceGlobalEventA: 'Buttons, selects, tree, TableForm, Group, SubForm, and Code all bind custom events.',
         practiceGlobalEventB: 'Events are registered on api.globalEvent; component handlers only pass context like field, value, and source.',
@@ -308,6 +319,12 @@ const SHOWCASE_LANGUAGE = {
         practiceDialogD: 'Note: do not modify rule.props.modelValue directly — for components with a field, modelValue is driven by the form data model and direct changes will be overridden.',
         dataTableTab: 'Data Table',
         dtTitle: 'Employee Data Table',
+        dtCursorTitle: 'Remote Cursor Pagination Table',
+        dtGlobalDataTitle: 'Online Global Data Table',
+        dtGlobalDataSelect: 'Online Todo Select',
+        dtGlobalDataSelectPlaceholder: 'Select online todo',
+        dtGlobalDataRefresh: 'Refresh Online Global Data',
+        dtGlobalDataAlert: 'The table and select below both bind fetch-based global data sources. Click the button to request the online API again and update global data; bound components refresh automatically.',
         dtAlert: 'Display table: column render (tag/link/image), filter (static/global source), sort, selection, pagination, row click and action callbacks are all configurable.',
         dtColId: 'ID',
         dtColAvatar: 'Avatar',
@@ -315,11 +332,16 @@ const SHOWCASE_LANGUAGE = {
         dtColCity: 'City',
         dtColStatus: 'Status',
         dtColGrade: 'Grade',
+        dtColTaskTitle: 'Task title',
+        dtColUser: 'User',
+        dtColCompleted: 'Completed',
         dtCityBJ: 'Beijing',
         dtCitySH: 'Shanghai',
         dtCityGZ: 'Guangzhou',
         dtStatusActive: 'Active',
         dtStatusLeft: 'Left',
+        dtStatusTodo: 'Todo',
+        dtStatusDone: 'Done',
         dtActionView: 'View',
         dtActionEdit: 'Edit',
         dtActionDelete: 'Delete',
@@ -328,7 +350,7 @@ const SHOWCASE_LANGUAGE = {
         practiceDataTableA: 'Data source: static data goes to props.data; remote/global can use effect.fetch / effect.globalData to write the list into props.data.',
         practiceDataTableB: 'Column render: render supports normal/tag/link/image; column filter supports static/global/fetch sources with unified {label, value} options.',
         practiceDataTableC: 'Sorting: normal sorts the full dataset inside the component; custom only emits sortChange so the backend can refetch (independent from paging/filtering).',
-        practiceDataTableD: 'Interaction: action click/disabled/hidden are (row, index) callbacks; selectionChange/rowClick/linkClick/pageChange can bind global methods.',
+        practiceDataTableD: 'Cursor pagination: cursorPagination is grouped by preset / request / response / labels. Choose a preset first, then override paths as needed.',
     },
 };
 
@@ -519,10 +541,56 @@ const remoteUserCodeFetchConfig = () => fetchConfig(
     {to: 'props.chartData'}
 );
 
-const getGlobalDataItems = () => {
+const cursorTodosFetchConfig = (t) => fetchConfig(
+    JSONPLACEHOLDER_TODOS_URL,
+    wrapFn('function parseCursorTodos(res){\n' +
+        '  var list = Array.isArray(res) ? res : (Array.isArray(res && res.data) ? res.data : []);\n' +
+        '  var rows = list.map(function(item){\n' +
+        '    return {\n' +
+        '      id: item.id,\n' +
+        '      title: item.title,\n' +
+        '      userId: item.userId,\n' +
+        '      completed: item.completed ? ' + JSON.stringify(t('dtStatusDone')) + ' : ' + JSON.stringify(t('dtStatusTodo')) + '\n' +
+        '    };\n' +
+        '  });\n' +
+        '  var nextCursor = list.length ? list[list.length - 1].id : "";\n' +
+        '  return {rows: rows, next_cursor: nextCursor, has_more: rows.length > 0 && Number(nextCursor) < 20};\n' +
+        '}'),
+    {}
+);
+
+const onlineTodoRowsFetchConfig = (t) => fetchConfig(
+    JSONPLACEHOLDER_TODOS_URL,
+    wrapFn('function parseOnlineTodoRows(res){\n' +
+        '  var list = Array.isArray(res) ? res : (Array.isArray(res && res.data) ? res.data : []);\n' +
+        '  return list.map(function(item){\n' +
+        '    return {\n' +
+        '      id: item.id,\n' +
+        '      title: item.title,\n' +
+        '      userId: item.userId,\n' +
+        '      completed: item.completed ? ' + JSON.stringify(t('dtStatusDone')) + ' : ' + JSON.stringify(t('dtStatusTodo')) + '\n' +
+        '    };\n' +
+        '  });\n' +
+        '}'),
+    {query: {_start: 0, _limit: 5}}
+);
+
+const onlineTodoOptionsFetchConfig = () => fetchConfig(
+    JSONPLACEHOLDER_TODOS_URL,
+    wrapFn('function parseOnlineTodoOptions(res){\n' +
+        '  var list = Array.isArray(res) ? res : (Array.isArray(res && res.data) ? res.data : []);\n' +
+        '  return list.map(function(item){\n' +
+        '    return {label: item.title, value: item.id};\n' +
+        '  });\n' +
+        '}'),
+    {query: {_start: 0, _limit: 5}}
+);
+
+const getGlobalDataItems = (t = createTranslator('zh-cn')) => {
     const staticItems = Object.keys(GLOBAL_DATA).map(name => ({
         name,
         type: 'static',
+        autoSync: name === 'chartChannel',
         data: JSON.stringify(GLOBAL_DATA[name]),
     }));
 
@@ -533,13 +601,26 @@ const getGlobalDataItems = () => {
             type: 'fetch',
             fetch: remoteUsersFetchConfig(),
         },
+        {
+            name: 'onlineTodoRows',
+            type: 'fetch',
+            autoSync: true,
+            fetch: onlineTodoRowsFetchConfig(t),
+        },
+        {
+            name: 'onlineTodoOptions',
+            type: 'fetch',
+            autoSync: true,
+            fetch: onlineTodoOptionsFetchConfig(),
+        },
     ];
 };
 
-const getCustomEvents = () => {
+const getCustomEvents = (t = createTranslator('zh-cn')) => {
     const eventNames = [
         'onFormLog',
         'onDataRefresh',
+        'onRefreshGlobalTodos',
         'onCodeChange',
         'onCityChange',
         'onRemoteUserChange',
@@ -562,7 +643,50 @@ const getCustomEvents = () => {
     const events = {
         _customEventNames: eventNames,
         onFormLog: wrapFn('function onFormLog(data){ console.log("[表单日志]", data); }'),
-        onDataRefresh: wrapFn('function onDataRefresh(data){ console.log("[数据刷新]", data); }'),
+        onDataRefresh: wrapFn('function onDataRefresh(data){\n' +
+            '  console.log("[数据刷新]", data);\n' +
+            '  if (!api || typeof api.updateGlobalData !== "function") return;\n' +
+            '  api.updateGlobalData("chartChannel", function(current){\n' +
+            '    if (!current || !current.series || !current.series[0] || !Array.isArray(current.series[0].data)) return current;\n' +
+            '    var seed = data && data.time ? data.time : Date.now();\n' +
+            '    var next = JSON.parse(JSON.stringify(current));\n' +
+            '    next.series[0].data = next.series[0].data.map(function(item, index){\n' +
+            '      var value = Number(item.value) || 0;\n' +
+            '      item.value = value + ((seed + index) % 5) + 1;\n' +
+            '      return item;\n' +
+            '    });\n' +
+            '    return next;\n' +
+            '  });\n' +
+            '}'),
+        onRefreshGlobalTodos: wrapFn('function onRefreshGlobalTodos(data){\n' +
+            '  console.log("[刷新线上全局数据源]", data);\n' +
+            '  if (!api || typeof api.fetch !== "function" || typeof api.setGlobalData !== "function") return;\n' +
+            '  var current = Number(api.globalData && api.globalData.onlineTodoOffset) || 0;\n' +
+            '  var nextStart = current >= 15 ? 0 : current + 5;\n' +
+            '  api.setGlobalData("onlineTodoOffset", nextStart, {silent: true});\n' +
+            '  api.fetch({\n' +
+            '    action: ' + JSON.stringify(JSONPLACEHOLDER_TODOS_URL) + ',\n' +
+            '    method: "GET",\n' +
+            '    dataType: "json",\n' +
+            '    headers: {},\n' +
+            '    query: {_start: nextStart, _limit: 5}\n' +
+            '  }).then(function(res){\n' +
+            '    var list = Array.isArray(res) ? res : (Array.isArray(res && res.data) ? res.data : []);\n' +
+            '    var rows = list.map(function(item){\n' +
+            '      return {\n' +
+            '        id: item.id,\n' +
+            '        title: item.title,\n' +
+            '        userId: item.userId,\n' +
+            '        completed: item.completed ? ' + JSON.stringify(t('dtStatusDone')) + ' : ' + JSON.stringify(t('dtStatusTodo')) + '\n' +
+            '      };\n' +
+            '    });\n' +
+            '    var options = list.map(function(item){\n' +
+            '      return {label: item.title, value: item.id};\n' +
+            '    });\n' +
+            '    api.setGlobalData("onlineTodoRows", rows);\n' +
+            '    api.setGlobalData("onlineTodoOptions", options);\n' +
+            '  }).catch(function(e){ console.error(e); });\n' +
+            '}'),
         onCodeChange: wrapFn('function onCodeChange(data){ console.log("[代码内容变化]", data); }'),
         onCityChange: wrapFn('function onCityChange(data){ console.log("[城市变化]", data); }'),
         onRemoteUserChange: wrapFn('function onRemoteUserChange(data){ console.log("[远程用户变化]", data); }'),
@@ -1485,6 +1609,134 @@ function dataTableTab(t) {
                 },
                 style: {width: '100%'},
             },
+            alertRule('show_alert_online_global_data_table', t('dtGlobalDataAlert'), 'success'),
+            row('show_online_global_controls', [
+                col('show_online_global_select_col', 16, {
+                    type: 'select',
+                    _fc_drag_tag: 'select',
+                    _fc_id: 'show_online_todo_select',
+                    field: 'onlineTodoSelect',
+                    title: t('dtGlobalDataSelect'),
+                    effect: optionGlobalData('onlineTodoOptions', 'options'),
+                    options: [],
+                    props: {placeholder: t('dtGlobalDataSelectPlaceholder'), clearable: true, filterable: true},
+                }),
+                col('show_online_global_button_col', 8, {
+                    type: 'elButton',
+                    _fc_drag_tag: 'elButton',
+                    _fc_id: 'show_online_global_refresh',
+                    props: {type: 'primary', size: 'default'},
+                    on: {
+                        click: globalEventCall('onRefreshGlobalTodos', '{source: "onlineGlobalTodoButton", time: Date.now()}'),
+                    },
+                    children: [t('dtGlobalDataRefresh')],
+                }),
+            ]),
+            {
+                type: 'fcDataTable',
+                _fc_drag_tag: 'fcDataTable',
+                _fc_id: 'show_online_global_data_table',
+                field: 'onlineTodoTable',
+                title: t('dtGlobalDataTitle'),
+                effect: optionGlobalData('onlineTodoRows', 'props.data'),
+                props: {
+                    data: [],
+                    columns: [
+                        {prop: 'id', label: t('dtColId'), width: '80', filter: '', className: '', sort: 'normal', overflow: '', fixed: '', align: 'center', render: 'normal', hide: false},
+                        {prop: 'title', label: t('dtColTaskTitle'), width: '', filter: '', className: '', sort: '', overflow: 'tooltip', fixed: '', align: 'left', render: 'normal', hide: false},
+                        {prop: 'userId', label: t('dtColUser'), width: '100', filter: '', className: '', sort: '', overflow: '', fixed: '', align: 'center', render: 'normal', hide: false},
+                        {prop: 'completed', label: t('dtColCompleted'), width: '120', filter: '', className: '', sort: '', overflow: '', fixed: '', align: 'center', render: 'tag', hide: false},
+                    ],
+                    actions: [],
+                    actionLabel: '',
+                    actionWidth: '',
+                    actionFixed: '',
+                    border: true,
+                    stripe: true,
+                    size: 'default',
+                    showIndex: false,
+                    selection: false,
+                    highlightCurrentRow: true,
+                    pagination: false,
+                    remotePagination: false,
+                    pageSize: 5,
+                    total: 0,
+                    height: '',
+                    maxHeight: '',
+                    emptyText: t('dtEmpty'),
+                    rowKey: 'id',
+                },
+                on: {
+                    rowClick: globalEventCall('onTableRowClick', '{row: $inject.args[0], source: "onlineTodoTable"}'),
+                },
+                style: {width: '100%', marginBottom: '20px'},
+            },
+            {
+                type: 'fcDataTable',
+                _fc_drag_tag: 'fcDataTable',
+                _fc_id: 'show_cursor_data_table',
+                field: 'cursorTodoTable',
+                title: t('dtCursorTitle'),
+                props: {
+                    data: [],
+                    columns: [
+                        {prop: 'id', label: t('dtColId'), width: '80', filter: '', className: '', sort: '', overflow: '', fixed: '', align: 'center', render: 'normal', hide: false},
+                        {prop: 'title', label: t('dtColTaskTitle'), width: '', filter: '', className: '', sort: '', overflow: 'tooltip', fixed: '', align: 'left', render: 'normal', hide: false},
+                        {prop: 'userId', label: t('dtColUser'), width: '100', filter: '', className: '', sort: '', overflow: '', fixed: '', align: 'center', render: 'normal', hide: false},
+                        {prop: 'completed', label: t('dtColCompleted'), width: '120', filter: '', className: '', sort: '', overflow: '', fixed: '', align: 'center', render: 'tag', hide: false},
+                    ],
+                    actions: [
+                        {id: 'view', label: t('dtActionView'), type: 'primary', size: 'small', decorate: ['text'], hide: false, disabledFn: '', hiddenFn: '', clickFn: wrapFn('function(row){ console.log("[cursor-view]", row); }')},
+                    ],
+                    actionLabel: '',
+                    actionWidth: '100',
+                    actionFixed: 'right',
+                    border: true,
+                    stripe: true,
+                    size: 'default',
+                    showIndex: false,
+                    selection: false,
+                    highlightCurrentRow: true,
+                    pagination: false,
+                    remotePagination: false,
+                    pageSize: 5,
+                    total: 0,
+                    cursorPagination: {
+                        enabled: true,
+                        preset: 'offsetLimit',
+                        autoLoad: true,
+                        fetch: cursorTodosFetchConfig(t),
+                        request: {
+                            cursorPath: 'query._start',
+                            pageSizePath: 'query._limit',
+                            pageSize: 5,
+                            initialCursor: '',
+                            emptyCursorBehavior: 'omit',
+                        },
+                        response: {
+                            rowsPath: 'rows',
+                            nextCursorPath: 'next_cursor',
+                            hasMorePath: 'has_more',
+                            prevCursorPath: '',
+                            totalPath: '',
+                        },
+                        labels: {
+                            prev: '',
+                            next: '',
+                        },
+                    },
+                    height: '',
+                    maxHeight: '',
+                    emptyText: t('dtEmpty'),
+                    rowKey: 'id',
+                },
+                effect: {fetch: ''},
+                on: {
+                    cursorPageChange: globalEventCall('onTablePage', '{cursor: $inject.args[0]}'),
+                    rowClick: globalEventCall('onTableRowClick', '{row: $inject.args[0]}'),
+                },
+                style: {width: '100%', marginTop: '20px'},
+            },
         ],
     };
 }
@@ -1536,16 +1788,18 @@ export function getShowcaseLanguage() {
     return clone(SHOWCASE_LANGUAGE);
 }
 
-export function getShowcaseOption() {
+export function getShowcaseOption(lang = 'zh-cn') {
+    const t = createTranslator(lang);
+
     return {
         form: {
             labelWidth: '125px',
         },
         _globalData: {
-            _items: getGlobalDataItems(),
+            _items: getGlobalDataItems(t),
         },
         _event: {
-            ...getCustomEvents(),
+            ...getCustomEvents(t),
             onSubmit: '',
             onReset: '',
             beforeSubmit: '',

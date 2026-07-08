@@ -59,6 +59,13 @@
                             </el-button>
                         </el-header>
                         <el-main v-if="activeIndex >= 0 && activeItem">
+                            <div class="_fd-gd-setting">
+                                <div>
+                                    <div class="_fd-gd-setting-title">{{ t('globalData.autoSync') }}</div>
+                                    <div class="_fd-gd-setting-desc">{{ t('globalData.autoSyncInfo') }}</div>
+                                </div>
+                                <el-switch v-model="activeItem.autoSync" />
+                            </div>
                             <template v-if="activeItem.type === 'static'">
                                 <StructEditor ref="structEditor" v-model="editData" />
                             </template>
@@ -296,7 +303,7 @@ export default defineComponent({
             if (this.items.some(item => item.name === name)) {
                 return errorMessage(this.t('globalData.nameExists'));
             }
-            const item = {name, type: this.addType};
+            const item = {name, type: this.addType, autoSync: true};
             if (this.addType === 'static') {
                 item.data = '';
             } else {
@@ -360,6 +367,31 @@ export default defineComponent({
 ._fd-gd-head-tip {
     font-size: 12px;
     color: #999;
+}
+
+._fd-gd-setting {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 12px 14px;
+    margin: 0 0 12px;
+    border: 1px solid #e8ecf5;
+    border-radius: 6px;
+    background: #f8faff;
+}
+
+._fd-gd-setting-title {
+    font-size: 13px;
+    line-height: 20px;
+    color: #1f2937;
+}
+
+._fd-gd-setting-desc {
+    margin-top: 2px;
+    font-size: 12px;
+    line-height: 18px;
+    color: #8a94a6;
 }
 
 ._fd-gd-l > .el-main {
