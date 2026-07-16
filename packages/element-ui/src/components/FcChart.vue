@@ -1,31 +1,58 @@
 <template>
-    <div ref="chartRef" :style="{width: width, height: height}"></div>
+    <div class="_fc-chart" :style="{width: width, height: height}">
+        <div ref="chartRef" class="_fc-chart__canvas"></div>
+        <div v-if="empty" class="_fc-chart__empty">{{ resolvedEmptyText }}</div>
+    </div>
 </template>
 
 <script>
-import {defineComponent, ref, watch, onMounted, onBeforeUnmount, nextTick, markRaw} from 'vue';
+import {computed, defineComponent, ref, watch, onMounted, onBeforeUnmount, nextTick, markRaw} from 'vue';
 import * as echarts from 'echarts';
-
-const defaultChartData = {
-    category: ['周一', '周二', '周三', '周四', '周五', '周六', '周日'],
-    series: [
-        {name: '数据A', data: [120, 132, 101, 134, 90, 230, 210]},
-        {name: '数据B', data: [220, 182, 191, 234, 290, 330, 310]},
-        {name: '数据C', data: [150, 232, 201, 154, 190, 330, 410]},
-        {name: '数据D', data: [320, 332, 301, 334, 390, 330, 320]},
-        {name: '数据E', data: [820, 932, 901, 934, 1290, 1330, 1320]},
-    ]
-};
 
 function formatValue(template, value) {
     if (!template || template === '{value}') return value;
     return template.replace(/\{value\}/g, value);
 }
 
-function buildOption(chartType, data, config) {
-    if (!data || !data.series) {
-        data = defaultChartData;
+function numericValue(value) {
+    const number = Number(value);
+    return Number.isFinite(number) ? number : 0;
+}
+
+function buildProportionData(data) {
+    const category = Array.isArray(data.category) ? data.category : [];
+    const series = Array.isArray(data.series) ? data.series : [];
+    const points = [];
+
+    series.forEach(seriesItem => {
+        const values = Array.isArray(seriesItem.data) ? seriesItem.data : [];
+        values.forEach((item, index) => {
+            if (item && typeof item === 'object' && !Array.isArray(item)) {
+                points.push({
+                    ...item,
+                    name: item.name == null ? (category[index] || seriesItem.name || String(index + 1)) : item.name,
+                    value: numericValue(item.value),
+                });
+            }
+        });
+    });
+    if (points.length) return points;
+
+    if (series.length === 1 && Array.isArray(series[0].data) && category.length) {
+        return series[0].data.map((value, index) => ({
+            name: category[index] == null ? String(index + 1) : category[index],
+            value: numericValue(value),
+        }));
     }
+
+    return series.map(seriesItem => ({
+        name: seriesItem.name,
+        value: (Array.isArray(seriesItem.data) ? seriesItem.data : [])
+            .reduce((total, value) => total + numericValue(value), 0),
+    }));
+}
+
+function buildOption(chartType, data, config) {
     const category = data.category || [];
     const series = data.series || [];
     const {
@@ -37,7 +64,11 @@ function buildOption(chartType, data, config) {
         showSymbol = true,
         showLabel = false,
         showAverageLine = false,
+        averageLineName = '平均值',
     } = config || {};
+    const proportionData = (chartType === 'pie' || chartType === 'funnel')
+        ? buildProportionData(data)
+        : [];
 
     const titleOption = (chartName || chartDescription) ? {
         title: {
@@ -66,10 +97,6 @@ function buildOption(chartType, data, config) {
     } : {label: {show: false}};
 
     if (chartType === 'pie') {
-        const pieData = series.map(s => {
-            const total = (s.data || []).reduce((a, b) => a + b, 0);
-            return {name: s.name, value: total};
-        });
         return {
             ...titleOption,
             ...tooltipFormatter,
@@ -78,7 +105,7 @@ function buildOption(chartType, data, config) {
                 type: 'pie',
                 radius: '60%',
                 top: chartName || chartDescription ? 30 : 0,
-                data: pieData,
+                data: proportionData,
                 ...labelConfig,
                 emphasis: {
                     itemStyle: {
@@ -92,11 +119,8 @@ function buildOption(chartType, data, config) {
     }
 
     if (chartType === 'funnel') {
-        const maxVal = Math.max(...series.map(s => (s.data || []).reduce((a, b) => a + b, 0)));
-        const funnelData = series.map(s => {
-            const total = (s.data || []).reduce((a, b) => a + b, 0);
-            return {name: s.name, value: total};
-        }).sort((a, b) => b.value - a.value);
+        const funnelData = proportionData.slice().sort((a, b) => b.value - a.value);
+        const maxVal = Math.max(0, ...funnelData.map(item => item.value));
         return {
             ...titleOption,
             ...tooltipFormatter,
@@ -161,7 +185,7 @@ function buildOption(chartType, data, config) {
                         type: 'dashed',
                     },
                     data: [
-                        {type: 'average', name: '平均值'}
+                        {type: 'average', name: averageLineName}
                     ]
                 };
             }
@@ -175,13 +199,17 @@ function buildOption(chartType, data, config) {
 export default defineComponent({
     name: 'FcChart',
     props: {
+        modelValue: {
+            type: Object,
+            default: undefined,
+        },
         chartType: {
             type: String,
             default: 'line'
         },
         chartData: {
             type: Object,
-            default: () => defaultChartData
+            default: undefined
         },
         width: {
             type: String,
@@ -223,15 +251,39 @@ export default defineComponent({
             type: Boolean,
             default: false
         },
+        averageLineName: {
+            type: String,
+            default: ''
+        },
+        emptyText: {
+            type: String,
+            default: ''
+        },
+        formCreateInject: Object,
     },
     setup(props) {
         const chartRef = ref(null);
+        const empty = ref(false);
+        const resolvedEmptyText = computed(() => props.emptyText
+            || (props.formCreateInject && props.formCreateInject.t && props.formCreateInject.t('com.fcChart.emptyDataText'))
+            || '暂无数据');
+        const resolvedAverageLineName = computed(() => props.averageLineName
+            || (props.formCreateInject && props.formCreateInject.t && props.formCreateInject.t('com.fcChart.averageLineDefault'))
+            || '平均值');
         let chart = null;
         let resizeObserver = null;
 
         const renderChart = () => {
             if (!chart) return;
-            const option = buildOption(props.chartType, props.chartData, {
+            const data = props.modelValue == null ? props.chartData : props.modelValue;
+            if (!data || !Array.isArray(data.series)
+                || !data.series.some(item => item && Array.isArray(item.data) && item.data.length > 0)) {
+                empty.value = true;
+                chart.clear();
+                return;
+            }
+            empty.value = false;
+            const option = buildOption(props.chartType, data, {
                 chartName: props.chartName,
                 chartDescription: props.chartDescription,
                 valueFormat: props.valueFormat,
@@ -240,6 +292,7 @@ export default defineComponent({
                 showSymbol: props.showSymbol,
                 showLabel: props.showLabel,
                 showAverageLine: props.showAverageLine,
+                averageLineName: resolvedAverageLineName.value,
             });
             chart.setOption(option, true);
         };
@@ -249,15 +302,18 @@ export default defineComponent({
                 if (chartRef.value) {
                     chart = markRaw(echarts.init(chartRef.value));
                     renderChart();
-                    resizeObserver = new ResizeObserver(() => {
-                        chart && chart.resize();
-                    });
-                    resizeObserver.observe(chartRef.value);
+                    if (typeof ResizeObserver !== 'undefined') {
+                        resizeObserver = new ResizeObserver(() => {
+                            chart && chart.resize();
+                        });
+                        resizeObserver.observe(chartRef.value);
+                    }
                 }
             });
         });
 
         watch(() => props.chartType, renderChart);
+        watch(() => props.modelValue, renderChart, {deep: true});
         watch(() => props.chartData, renderChart, {deep: true});
         watch(() => props.chartName, renderChart);
         watch(() => props.chartDescription, renderChart);
@@ -267,6 +323,7 @@ export default defineComponent({
         watch(() => props.showSymbol, renderChart);
         watch(() => props.showLabel, renderChart);
         watch(() => props.showAverageLine, renderChart);
+        watch(() => props.averageLineName, renderChart);
 
         onBeforeUnmount(() => {
             if (resizeObserver && chartRef.value) {
@@ -279,7 +336,28 @@ export default defineComponent({
             }
         });
 
-        return {chartRef};
+        return {chartRef, empty, resolvedEmptyText};
     }
 });
 </script>
+
+<style scoped>
+._fc-chart {
+    position: relative;
+}
+
+._fc-chart__canvas {
+    width: 100%;
+    height: 100%;
+}
+
+._fc-chart__empty {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--el-text-color-secondary, #909399);
+    font-size: 14px;
+}
+</style>

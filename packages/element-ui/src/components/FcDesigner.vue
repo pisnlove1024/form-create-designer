@@ -804,6 +804,32 @@ export default defineComponent({
             call({source, field: lastField});
         }
 
+        const hasSourceConfig = (value) => {
+            if (isNull(value) || value === '') return false;
+            if (Array.isArray(value)) return value.length > 0;
+            if (is.Object(value)) {
+                return Object.keys(value).some(key => key !== 'to' && hasSourceConfig(value[key]));
+            }
+            return true;
+        }
+
+        const hasGlobalDataConfig = (value) => {
+            if (is.String(value)) return value !== '';
+            if (is.Object(value)) return hasSourceConfig(value.name);
+            return hasSourceConfig(value);
+        }
+
+        const getDataSourceType = (rule) => {
+            const effect = rule.effect || {};
+            if (hasGlobalDataConfig(effect.globalData)) return 3;
+            if (hasSourceConfig(effect.fetch)) return 1;
+            return 2;
+        }
+
+        const getVisibleSourceType = (rule) => {
+            return hasGlobalDataConfig(rule.effect && rule.effect.globalData) ? 2 : 1;
+        }
+
         watch(() => locale.value, (n) => {
             _t = n ? useLocale(locale).t : globalT;
             methods.clearActiveRule();
@@ -2026,6 +2052,9 @@ export default defineComponent({
                         formData['formCreate' + upper(name) + '>' + k] = deepCopy(rule[name][k]);
                     });
                 });
+                formData._optionType = getDataSourceType(rule);
+                formData._dataType = getDataSourceType(rule);
+                formData._visibleType = getVisibleSourceType(rule);
                 const configAttrs = rule._menu.attrs || {};
                 Object.keys(configAttrs).forEach(k => {
                     formData['__' + k] = configAttrs[k]({rule});

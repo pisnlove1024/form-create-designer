@@ -41,6 +41,8 @@ export default {
                 showSymbol: true,
                 showLabel: false,
                 showAverageLine: false,
+                averageLineName: '',
+                emptyText: '',
             },
             effect: {
                 fetch: ''
@@ -74,6 +76,18 @@ export default {
                                 type: 'switch',
                                 field: 'showAverageLine',
                                 title: t('com.fcChart.props.showAverageLine'),
+                                control: [
+                                    {
+                                        value: true,
+                                        rule: [
+                                            {
+                                                type: 'input',
+                                                field: 'averageLineName',
+                                                title: t('com.fcChart.props.averageLineName'),
+                                            }
+                                        ]
+                                    }
+                                ],
                             }
                         ]
                     },
@@ -144,6 +158,10 @@ export default {
                 type: 'input',
                 field: 'valueFormat',
                 value: '{value}',
+            },
+            {
+                type: 'input',
+                field: 'emptyText',
             },
             {
                 type: 'switch',

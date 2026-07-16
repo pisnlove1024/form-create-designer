@@ -1,5 +1,5 @@
 <template>
-    <el-select v-model="selectedValue" :placeholder="t('globalData.selectPlaceholder')" size="default"
+    <el-select v-model="selectedValue" :placeholder="t('globalData.selectPlaceholder')" size="default" clearable
                @change="onChange" style="width: 100%;">
         <el-option v-for="item in globalDataOptions" :key="item.name"
                    :label="item.name" :value="item.name">
@@ -62,6 +62,10 @@ export default defineComponent({
             }
         },
         onChange(val) {
+            if (!val) {
+                this.$emit('update:modelValue', '');
+                return;
+            }
             this.$emit('update:modelValue', {name: val, to: this.to});
         },
     }

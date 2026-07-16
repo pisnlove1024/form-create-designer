@@ -13,6 +13,7 @@ export default {
             type: name,
             title: '',
             native: true,
+            htmlPreview: false,
             attrs: {
                 innerHTML: ''
             },
@@ -30,6 +31,12 @@ export default {
             if (value) {
                 rule.title = '';
             }
+        },
+        formCreateHtmlPreview({rule}) {
+            // htmlPreview is a designer-only root field, so form-create does not
+            // include it in its default reactive attribute list. Explicitly
+            // invalidate this rule's render cache when the switch changes.
+            rule.__fc__?.$api?.sync(rule);
         }
     },
     props(_, {t}) {
@@ -43,6 +50,10 @@ export default {
             }, {
                 type: 'input',
                 field: 'formCreateTitle',
+            }, {
+                type: 'switch',
+                field: 'formCreateHtmlPreview',
+                value: false,
             }, {
                 type: 'HtmlEditor',
                 field: 'formCreateChild',

@@ -1,11 +1,11 @@
 <template>
     <div class="_dta-trigger">
-        <el-button size="small" @click="visible = true">
+        <el-button size="small" @click="openEditor">
             {{ t('dataTableActions.title') }}
             <span class="_dta-count">{{ list.length }}</span>
         </el-button>
         <el-dialog class="_dta-dialog" :title="t('dataTableActions.title')" v-model="visible"
-                   destroy-on-close append-to-body :close-on-click-modal="false" width="1100px">
+                   destroy-on-close append-to-body :close-on-click-modal="false" width="1400px">
             <div class="_dta">
                 <div class="_dta-scroll">
                     <div class="_dta-head _dta-row">
@@ -18,10 +18,12 @@
                         <div class="_dta-cell _dta-c-size">{{ t('dataTableActions.size') }}</div>
                         <div class="_dta-cell _dta-c-decorate">{{ t('dataTableActions.decorate') }}</div>
                         <div class="_dta-cell _dta-c-hide">{{ t('dataTableActions.hide') }}</div>
+                        <div class="_dta-cell _dta-c-confirm">{{ t('dataTableActions.confirm') }}</div>
+                        <div class="_dta-cell _dta-c-message">{{ t('dataTableActions.message') }}</div>
                         <div class="_dta-cell _dta-c-callback">{{ t('dataTableActions.callback') }}</div>
                         <div class="_dta-cell _dta-op">{{ t('dataTableActions.operation') }}</div>
                     </div>
-                    <draggable :list="list" handle="._dta-handle" item-key="_id" @end="emitChange" :animation="150">
+                    <draggable :list="editingList" handle="._dta-handle" item-key="_id" :animation="150">
                         <template #item="{element, index}">
                             <div class="_dta-row">
                                 <div class="_dta-cell _dta-drag-col">
@@ -40,44 +42,62 @@
                                 </div>
                                 <div class="_dta-cell _dta-c-id">
                                     <el-input v-model="element.id" size="small"
-                                              :placeholder="t('dataTableActions.placeholder')" @input="emitChange"/>
+                                              :placeholder="t('dataTableActions.placeholder')"/>
                                 </div>
                                 <div class="_dta-cell _dta-c-label">
                                     <el-input v-model="element.label" size="small"
-                                              :placeholder="t('dataTableActions.placeholder')" @input="emitChange"/>
+                                              :placeholder="t('dataTableActions.placeholder')"/>
                                 </div>
                                 <div class="_dta-cell _dta-c-type">
                                     <el-select v-model="element.type" clearable size="small"
-                                               :placeholder="t('dataTableActions.placeholder')" @change="emitChange">
+                                               :placeholder="t('dataTableActions.placeholder')">
                                         <el-option v-for="opt in typeOptions" :key="opt.value" :label="opt.label" :value="opt.value"/>
                                     </el-select>
                                 </div>
                                 <div class="_dta-cell _dta-c-size">
                                     <el-select v-model="element.size" clearable size="small"
-                                               :placeholder="t('dataTableActions.placeholder')" @change="emitChange">
+                                               :placeholder="t('dataTableActions.placeholder')">
                                         <el-option v-for="opt in sizeOptions" :key="opt.value" :label="opt.label" :value="opt.value"/>
                                     </el-select>
                                 </div>
                                 <div class="_dta-cell _dta-c-decorate">
                                     <el-select v-model="element.decorate" multiple collapse-tags clearable size="small"
-                                               :placeholder="t('dataTableActions.placeholder')" @change="emitChange">
+                                               :placeholder="t('dataTableActions.placeholder')">
                                         <el-option v-for="opt in decorateOptions" :key="opt.value" :label="opt.label" :value="opt.value"/>
                                     </el-select>
                                 </div>
                                 <div class="_dta-cell _dta-c-hide">
-                                    <el-switch v-model="element.hide" @change="emitChange"/>
+                                    <el-switch v-model="element.hide"/>
+                                </div>
+                                <div class="_dta-cell _dta-c-confirm">
+                                    <el-switch :model-value="isConfirmEnabled(element)"
+                                               @change="setConfirmEnabled(element, $event)"/>
+                                    <div v-if="isConfirmEnabled(element)" class="_dta-confirm-config">
+                                        <el-input :model-value="getConfirmMessage(element)" size="small"
+                                                  :placeholder="t('dataTableActions.confirmMessage')"
+                                                  @input="setConfirmMessage(element, $event)"/>
+                                        <el-input :model-value="getConfirmTitle(element)" size="small"
+                                                  :placeholder="t('dataTableActions.confirmTitle')"
+                                                  @input="setConfirmTitle(element, $event)"/>
+                                    </div>
+                                </div>
+                                <div class="_dta-cell _dta-c-message">
+                                    <el-input v-model="element.successMessage" size="small"
+                                              :placeholder="t('dataTableActions.successMessage')"/>
+                                    <el-input v-model="element.errorMessage" size="small"
+                                              :placeholder="t('dataTableActions.errorMessage')"/>
                                 </div>
                                 <div class="_dta-cell _dta-c-callback">
                                     <FnInput v-model="element.disabledFn" :args="callbackArgs"
-                                             :title="t('dataTableActions.callbackType.disabled')" @change="emitChange">
+                                             :title="t('dataTableActions.callbackType.disabled')">
                                         {{ t('dataTableActions.callbackType.disabled') }}
                                     </FnInput>
                                     <FnInput v-model="element.hiddenFn" :args="callbackArgs"
-                                             :title="t('dataTableActions.callbackType.hidden')" @change="emitChange">
+                                             :title="t('dataTableActions.callbackType.hidden')">
                                         {{ t('dataTableActions.callbackType.hidden') }}
                                     </FnInput>
                                     <FnInput v-model="element.clickFn" :args="callbackArgs"
-                                             :title="t('dataTableActions.callbackType.click')" @change="emitChange">
+                                             :title="t('dataTableActions.callbackType.click')">
                                         {{ t('dataTableActions.callbackType.click') }}
                                     </FnInput>
                                 </div>
@@ -95,8 +115,8 @@
                 </div>
             </div>
             <template #footer>
-                <el-button @click="visible = false">{{ t('props.cancel') }}</el-button>
-                <el-button type="primary" @click="visible = false">{{ t('props.ok') }}</el-button>
+                <el-button @click="cancelEditor">{{ t('props.cancel') }}</el-button>
+                <el-button type="primary" @click="confirmEditor">{{ t('props.ok') }}</el-button>
             </template>
         </el-dialog>
     </div>
@@ -106,22 +126,14 @@
 import {defineComponent} from 'vue';
 import draggable from 'vuedraggable/src/vuedraggable';
 import uniqueId from '@form-create/utils/lib/unique';
+import errorMessage from '../utils/message';
 import FnInput from './FnInput.vue';
-
-const FIELDS = ['id', 'label', 'type', 'size', 'decorate', 'hide', 'disabledFn', 'hiddenFn', 'clickFn'];
+import {normalizeDataTableAction, validateDataTableActions} from '../runtime/dataTableAction';
 
 function makeAction(source = {}) {
     return {
+        ...normalizeDataTableAction(source),
         _id: uniqueId(),
-        id: source.id || '',
-        label: source.label || '',
-        type: source.type || '',
-        size: source.size || '',
-        decorate: Array.isArray(source.decorate) ? source.decorate.slice() : [],
-        hide: source.hide || false,
-        disabledFn: source.disabledFn || '',
-        hiddenFn: source.hiddenFn || '',
-        clickFn: source.clickFn || '',
     };
 }
 
@@ -140,8 +152,8 @@ export default defineComponent({
         return {
             visible: false,
             list: (this.modelValue || []).map(makeAction),
-            oldValue: JSON.stringify(this.modelValue || []),
-            callbackArgs: ['row', 'index'],
+            editingList: [],
+            callbackArgs: ['row', 'index', 'action', 'context'],
         };
     },
     computed: {
@@ -169,39 +181,105 @@ export default defineComponent({
     },
     watch: {
         modelValue(v) {
-            const str = JSON.stringify(v || []);
-            if (str === this.oldValue) {
-                return;
-            }
-            this.oldValue = str;
             this.list = (v || []).map(makeAction);
+            if (!this.visible) {
+                this.editingList = [];
+            }
         },
     },
     methods: {
         hasDecorate(item, key) {
             return Array.isArray(item.decorate) && item.decorate.indexOf(key) > -1;
         },
+        isConfirmEnabled(item) {
+            const confirm = item && item.confirm;
+            return !!confirm && !(typeof confirm === 'object' && confirm.enabled === false);
+        },
+        getConfirmMessage(item) {
+            const confirm = item && item.confirm;
+            if (typeof confirm === 'string') {
+                return confirm;
+            }
+            return confirm && typeof confirm === 'object' ? (confirm.message || '') : '';
+        },
+        getConfirmTitle(item) {
+            const confirm = item && item.confirm;
+            return confirm && typeof confirm === 'object' ? (confirm.title || '') : '';
+        },
+        setConfirmEnabled(item, enabled) {
+            if (!enabled) {
+                item.confirm = false;
+                return;
+            }
+            if (!item.confirm || (typeof item.confirm === 'object' && item.confirm.enabled === false)) {
+                item.confirm = true;
+            }
+        },
+        setConfirmMessage(item, message) {
+            const confirm = item.confirm;
+            if (typeof confirm === 'object' && confirm) {
+                item.confirm = {...confirm, enabled: true, message};
+                return;
+            }
+            item.confirm = message ? {enabled: true, message} : true;
+        },
+        setConfirmTitle(item, title) {
+            const confirm = item.confirm;
+            const message = this.getConfirmMessage(item);
+            const config = confirm && typeof confirm === 'object' ? confirm : {};
+            item.confirm = {
+                ...config,
+                enabled: true,
+                ...(message ? {message} : {}),
+                title,
+            };
+        },
         clean() {
-            return this.list.map(item => {
-                return FIELDS.reduce((act, key) => {
-                    act[key] = item[key];
-                    return act;
-                }, {});
+            return this.editingList.map(item => {
+                const action = {...item};
+                delete action._id;
+                return action;
             });
         },
-        emitChange() {
+        openEditor() {
+            this.editingList = this.list.map(makeAction);
+            this.visible = true;
+        },
+        cancelEditor() {
+            this.visible = false;
+            this.editingList = [];
+        },
+        validate() {
+            const result = validateDataTableActions(this.editingList);
+            if (!result.valid) {
+                const message = result.code === 'duplicate'
+                    ? this.t('dataTableActions.duplicateError')
+                    : this.t('dataTableActions.requiredError');
+                errorMessage(`${result.index + 1}: ${message}`);
+                return false;
+            }
+            this.editingList.forEach(action => {
+                action.id = String(action.id).trim();
+                action.label = String(action.label).trim();
+            });
+            return true;
+        },
+        confirmEditor() {
+            if (!this.validate()) {
+                return;
+            }
             const value = this.clean();
-            this.oldValue = JSON.stringify(value);
+            this.list = value.map(makeAction);
             this.$emit('update:modelValue', value);
             this.$emit('change', value);
+            this.visible = false;
+            this.editingList = [];
         },
         addRow() {
-            this.list.push(makeAction());
-            this.emitChange();
+            this.editingList.push(makeAction());
         },
         delRow(idx) {
-            this.list.splice(idx, 1);
-            this.emitChange();
+            this.editingList.splice(idx, 1);
         },
     },
 });
@@ -280,6 +358,23 @@ export default defineComponent({
 ._dta-c-hide {
     width: 60px;
     text-align: center;
+}
+
+._dta-c-confirm {
+    width: 250px;
+    text-align: center;
+}
+
+._dta-confirm-config {
+    display: flex;
+    gap: 4px;
+    margin-top: 4px;
+}
+
+._dta-c-message {
+    width: 220px;
+    display: flex;
+    gap: 4px;
 }
 
 ._dta-c-callback {

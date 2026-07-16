@@ -1,6 +1,6 @@
 {
     "name": "@cg-devcenter/form-create.designer",
-    "version": "3.4.0-cg.6",
+    "version": "3.4.0-cg.8",
     "description": "二开By CG,好用的Vue低代码可视化表单设计器，可以通过拖拽的方式快速创建表单，提高开发者对表单的开发效率。",
     "unpkg": "./dist/index.umd.js",
     "jsdelivr": "./dist/index.umd.js",
@@ -9,7 +9,7 @@
     "module": "./dist/index.es.js",
     "scripts": {
         "clean": "rimraf dist/",
-        "dev": "vue-cli-service serve",
+        "dev": "vue-cli-service serve --port 8088",
         "build": "vite build --config ./vite.config.build.js && vite build --config ./vite.config.form.js",
         "build:form": "vite build --config ./vite.config.form.js",
         "build:locale": "gulp -f gulpfile.js",

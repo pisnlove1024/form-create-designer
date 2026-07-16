@@ -62,6 +62,7 @@ import GlobalDataSelect from './GlobalDataSelect.vue';
 function normalize(source) {
     const v = (source && typeof source === 'object') ? source : {};
     return {
+        ...deepCopy(v),
         type: v.type || '',
         options: Array.isArray(v.options) ? deepCopy(v.options) : [],
         fetch: v.fetch && typeof v.fetch === 'object' ? deepCopy(v.fetch) : {},
@@ -115,6 +116,7 @@ export default defineComponent({
         },
         onOk() {
             const value = {
+                ...this.local,
                 type: this.local.type,
                 options: this.local.type === 'static' ? this.local.options.filter(o => o.label !== '' || o.value !== '') : [],
                 fetch: this.local.type === 'fetch' ? this.local.fetch : {},

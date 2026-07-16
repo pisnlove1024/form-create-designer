@@ -54,6 +54,7 @@
                             :text="hasDecorate(act, 'text')"
                             :round="hasDecorate(act, 'round')"
                             :plain="hasDecorate(act, 'plain')"
+                            :loading="isActionLoading(act, scope.row, scope.$index)"
                             :disabled="actionDisabled(act, scope.row, scope.$index)"
                             @click="onActionClick(act, scope.row, scope.$index)">
                             {{ act.label }}
@@ -86,12 +87,24 @@
 
 <script>
 import {defineComponent} from 'vue';
+import {ElMessageBox} from 'element-plus';
+import {message} from '../utils/message';
+
+const actionRowIds = new WeakMap();
+let actionRowIdSeed = 0;
 
 export default defineComponent({
     name: 'FcDataTable',
-    emits: ['selectionChange', 'sortChange', 'filterChange', 'pageChange', 'cursorPageChange', 'rowClick', 'linkClick', 'actionClick'],
+    emits: [
+        'selectionChange', 'sortChange', 'filterChange', 'pageChange', 'cursorPageChange',
+        'rowClick', 'linkClick', 'actionClick', 'actionSuccess', 'actionError', 'actionFinally',
+    ],
     props: {
         formCreateInject: Object,
+        modelValue: {
+            type: Array,
+            default: undefined,
+        },
         data: {
             type: Array,
             default: () => [],
@@ -106,7 +119,7 @@ export default defineComponent({
         },
         actionLabel: {
             type: String,
-            default: '操作',
+            default: '',
         },
         actionWidth: [String, Number],
         actionFixed: {
@@ -168,7 +181,7 @@ export default defineComponent({
             innerPageSize: this.pageSize || 10,
             filterLoading: 0,
             cursorLoading: false,
-            cursorRows: Array.isArray(this.data) ? this.data.slice() : [],
+            cursorRows: Array.isArray(this.modelValue) ? this.modelValue.slice() : (Array.isArray(this.data) ? this.data.slice() : []),
             cursorHasMore: false,
             cursorNextCursor: '',
             cursorPrevCursor: '',
@@ -178,6 +191,8 @@ export default defineComponent({
             // 自管的筛选/排序状态，作用于全量数据（修复分页只对当页排序/筛选的问题）
             filterState: {},
             sortState: {prop: '', order: ''},
+            selectionRows: [],
+            actionLoading: {},
         };
     },
     computed: {
@@ -220,7 +235,8 @@ export default defineComponent({
             return this.cursorRequestConfig.initialCursor;
         },
         sourceData() {
-            return this.cursorEnabled ? this.cursorRows : (this.data || []);
+            const data = Array.isArray(this.modelValue) ? this.modelValue : this.data;
+            return this.cursorEnabled ? this.cursorRows : (data || []);
         },
         filteredData() {
             let list = this.sourceData;
@@ -277,8 +293,14 @@ export default defineComponent({
     },
     watch: {
         data(v) {
-            if (this.cursorEnabled && !this.cursorAutoLoad) {
+            if (!Array.isArray(this.modelValue) && this.cursorEnabled && !this.cursorAutoLoad) {
                 this.cursorRows = Array.isArray(v) ? v.slice() : [];
+            }
+        },
+        modelValue(v) {
+            if (this.cursorEnabled && !this.cursorAutoLoad) {
+                const data = Array.isArray(v) ? v : this.data;
+                this.cursorRows = Array.isArray(data) ? data.slice() : [];
             }
         },
         cursorPagination: {
@@ -557,21 +579,24 @@ export default defineComponent({
             return config;
         },
         resetCursorState() {
-            this.cursorRows = Array.isArray(this.data) ? this.data.slice() : [];
+            const data = Array.isArray(this.modelValue) ? this.modelValue : this.data;
+            this.cursorRows = Array.isArray(data) ? data.slice() : [];
             this.cursorHasMore = false;
             this.cursorNextCursor = '';
             this.cursorPrevCursor = '';
-            this.cursorCurrentCursor = this.cursorInitialCursorValue || '';
+            this.cursorCurrentCursor = this.hasCursorValue(this.cursorInitialCursorValue) ? this.cursorInitialCursorValue : '';
             this.cursorCursorStack = [];
         },
         loadCursorFirst() {
-            return this.loadCursorPage(this.cursorInitialCursorValue || '', [], 'first');
+            const cursor = this.hasCursorValue(this.cursorInitialCursorValue) ? this.cursorInitialCursorValue : '';
+            return this.loadCursorPage(cursor, [], 'first');
         },
         loadCursorNext() {
             if (!this.canCursorNext || this.cursorLoading) {
                 return undefined;
             }
-            return this.loadCursorPage(this.cursorNextCursor, this.cursorCursorStack.concat([this.cursorCurrentCursor || '']), 'next');
+            const currentCursor = this.hasCursorValue(this.cursorCurrentCursor) ? this.cursorCurrentCursor : '';
+            return this.loadCursorPage(this.cursorNextCursor, this.cursorCursorStack.concat([currentCursor]), 'next');
         },
         loadCursorPrev() {
             if (!this.canCursorPrev || this.cursorLoading) {
@@ -582,7 +607,7 @@ export default defineComponent({
             if (stack.length && cursor === stack[stack.length - 1]) {
                 stack.pop();
             }
-            return this.loadCursorPage(cursor || '', stack, 'prev');
+            return this.loadCursorPage(this.hasCursorValue(cursor) ? cursor : '', stack, 'prev');
         },
         loadCursorPage(cursor, stack, direction) {
             const api = this.formCreateInject && this.formCreateInject.api;
@@ -603,7 +628,7 @@ export default defineComponent({
                     this.cursorHasMore = rawHasMore === undefined ? this.hasCursorValue(nextCursor) : this.normalizeBoolean(rawHasMore);
                     this.cursorNextCursor = nextCursor;
                     this.cursorPrevCursor = prevCursor;
-                    this.cursorCurrentCursor = cursor || '';
+                    this.cursorCurrentCursor = this.hasCursorValue(cursor) ? cursor : '';
                     this.cursorCursorStack = Array.isArray(stack) ? stack.slice() : [];
                     this.$emit('cursorPageChange', {
                         direction,
@@ -695,6 +720,7 @@ export default defineComponent({
             this.filterOptions = nextOptions;
         },
         onSelectionChange(rows) {
+            this.selectionRows = Array.isArray(rows) ? rows.slice() : [];
             this.$emit('selectionChange', rows);
         },
         onSortChange({prop, order}) {
@@ -720,33 +746,152 @@ export default defineComponent({
         hasDecorate(act, key) {
             return Array.isArray(act.decorate) && act.decorate.indexOf(key) > -1;
         },
-        callFn(fn, row, index) {
+        makeActionContext(act, row, index) {
+            return {
+                action: act,
+                row,
+                index,
+                table: this,
+                tableRef: this.$refs.table,
+                api: this.formCreateInject && this.formCreateInject.api,
+                emit: (...args) => this.$emit(...args),
+                selectedRows: this.getSelectedRows(),
+            };
+        },
+        callFn(fn, row, index, act, context) {
             if (typeof fn !== 'function') {
                 return undefined;
             }
-            try {
-                return fn.call(this, row, index);
-            } catch (e) {
-                // eslint-disable-next-line no-console
-                console.error(e);
-                return undefined;
-            }
+            return fn.call(this, row, index, act, context || this.makeActionContext(act, row, index));
         },
         actionHidden(act, row, index) {
             if (act.hide) {
                 return true;
             }
-            return this.callFn(act.hiddenFn, row, index) === true;
+            try {
+                return this.callFn(act.hiddenFn, row, index, act) === true;
+            } catch (e) {
+                // eslint-disable-next-line no-console
+                console.error(e);
+                return false;
+            }
         },
         actionDisabled(act, row, index) {
-            if (this.hasDecorate(act, 'disabled')) {
+            if (this.hasDecorate(act, 'disabled') || this.isActionLoading(act, row, index)) {
                 return true;
             }
-            return this.callFn(act.disabledFn, row, index) === true;
+            try {
+                return this.callFn(act.disabledFn, row, index, act) === true;
+            } catch (e) {
+                // eslint-disable-next-line no-console
+                console.error(e);
+                return false;
+            }
+        },
+        getRowIdentity(row, index) {
+            if (this.rowKey && row && row[this.rowKey] !== undefined) {
+                return String(row[this.rowKey]);
+            }
+            if (row && typeof row === 'object') {
+                if (!actionRowIds.has(row)) {
+                    actionRowIds.set(row, ++actionRowIdSeed);
+                }
+                return String(actionRowIds.get(row));
+            }
+            return String(index);
+        },
+        getActionLoadingKey(act, row, index) {
+            return (act.id || this.actions.indexOf(act)) + ':' + this.getRowIdentity(row, index);
+        },
+        isActionLoading(act, row, index) {
+            return !!this.actionLoading[this.getActionLoadingKey(act, row, index)];
+        },
+        setActionLoading(act, row, index, loading) {
+            const key = this.getActionLoadingKey(act, row, index);
+            if (loading) {
+                this.actionLoading = {...this.actionLoading, [key]: true};
+            } else {
+                const next = {...this.actionLoading};
+                delete next[key];
+                this.actionLoading = next;
+            }
+        },
+        getSelectedRows() {
+            const table = this.$refs.table;
+            if (table && typeof table.getSelectionRows === 'function') {
+                return table.getSelectionRows();
+            }
+            return this.selectionRows.slice();
+        },
+        requestActionConfirm(act) {
+            if (!act.confirm || (typeof act.confirm === 'object' && act.confirm.enabled === false)) {
+                return Promise.resolve(true);
+            }
+            const config = typeof act.confirm === 'object' ? act.confirm : {};
+            const message = typeof act.confirm === 'string'
+                ? act.confirm
+                : (config.message || this.translate('actionConfirm', '确认执行该操作吗？'));
+            const title = config.title || this.translate('actionConfirmTitle', '提示');
+            const options = {...config};
+            delete options.message;
+            delete options.title;
+            delete options.enabled;
+            return ElMessageBox.confirm(message, title, options).then(() => true).catch(() => false);
+        },
+        resolveAction(action) {
+            return typeof action === 'string'
+                ? (this.actions || []).find(item => item && item.id === action)
+                : action;
+        },
+        executeAction(action, row, index, options = {}) {
+            const act = this.resolveAction(action);
+            if (index === undefined || index === null) {
+                index = this.displayData.indexOf(row);
+            }
+            if (!act || this.isActionLoading(act, row, index)) {
+                return Promise.resolve(undefined);
+            }
+            const context = this.makeActionContext(act, row, index);
+            const payload = {action: act, row, index, context};
+            this.$emit('actionClick', payload);
+            const confirm = options.skipConfirm ? Promise.resolve(true) : this.requestActionConfirm(act);
+            return confirm.then(confirmed => {
+                if (!confirmed) {
+                    return undefined;
+                }
+                if (this.isActionLoading(act, row, index)) {
+                    return undefined;
+                }
+                this.setActionLoading(act, row, index, true);
+                return Promise.resolve().then(() => this.callFn(act.clickFn, row, index, act, context))
+                    .then(result => {
+                        const successPayload = {...payload, result};
+                        if (act.successMessage) {
+                            message(act.successMessage, 'success');
+                        }
+                        this.$emit('actionSuccess', successPayload);
+                        return result;
+                    })
+                    .catch(error => {
+                        const errorPayload = {...payload, error};
+                        if (act.errorMessage) {
+                            message(act.errorMessage, 'error');
+                        }
+                        this.$emit('actionError', errorPayload);
+                        throw error;
+                    })
+                    .finally(() => {
+                        this.setActionLoading(act, row, index, false);
+                        this.$emit('actionFinally', payload);
+                    });
+            });
         },
         onActionClick(act, row, index) {
-            this.$emit('actionClick', {action: act, row, index});
-            this.callFn(act.clickFn, row, index);
+            this.executeAction(act, row, index).catch(error => {
+                // The error is exposed through actionError; avoid an unhandled click promise.
+                // eslint-disable-next-line no-console
+                console.error(error);
+            });
         },
     },
 });

@@ -1,6 +1,6 @@
 <template>
     <div class="_dtc-trigger">
-        <el-button size="small" @click="visible = true">
+        <el-button size="small" @click="openEditor">
             {{ t('dataTableColumns.title') }}
             <span class="_dtc-count">{{ list.length }}</span>
         </el-button>
@@ -24,7 +24,7 @@
                 <div class="_dtc-cell _dtc-c-hide">{{ t('dataTableColumns.hide') }}</div>
                 <div class="_dtc-cell _dtc-op">{{ t('dataTableColumns.operation') }}</div>
             </div>
-            <draggable :list="list" handle="._dtc-handle" item-key="_id" @end="emitChange" :animation="150">
+            <draggable :list="editingList" handle="._dtc-handle" item-key="_id" :animation="150">
                 <template #item="{element, index}">
                     <div class="_dtc-row">
                         <div class="_dtc-cell _dtc-drag-col">
@@ -33,56 +33,55 @@
                         <div class="_dtc-cell _dtc-idx">{{ index + 1 }}</div>
                         <div class="_dtc-cell _dtc-c-prop">
                             <el-select v-model="element.prop" filterable allow-create default-first-option clearable
-                                       size="small" :placeholder="t('dataTableColumns.placeholder')"
-                                       @change="emitChange">
+                                       size="small" :placeholder="t('dataTableColumns.placeholder')">
                                 <el-option v-for="opt in fieldOptions" :key="opt" :label="opt" :value="opt"/>
                             </el-select>
                         </div>
                         <div class="_dtc-cell _dtc-c-label">
                             <el-input v-model="element.label" size="small"
-                                      :placeholder="t('dataTableColumns.placeholder')" @input="emitChange"/>
+                                      :placeholder="t('dataTableColumns.placeholder')"/>
                         </div>
                         <div class="_dtc-cell _dtc-c-width">
-                            <el-input v-model="element.width" size="small" @input="emitChange"/>
+                            <el-input v-model="element.width" size="small"/>
                         </div>
                         <div class="_dtc-cell _dtc-c-filter">
-                            <DataTableFilter v-model="element.filter" @change="emitChange"/>
+                            <DataTableFilter v-model="element.filter"/>
                         </div>
                         <div class="_dtc-cell _dtc-c-class">
-                            <el-input v-model="element.className" size="small" @input="emitChange"/>
+                            <el-input v-model="element.className" size="small"/>
                         </div>
                         <div class="_dtc-cell _dtc-c-sort">
                             <el-select v-model="element.sort" size="small"
-                                       :placeholder="t('dataTableColumns.placeholder')" @change="emitChange">
+                                       :placeholder="t('dataTableColumns.placeholder')">
                                 <el-option v-for="opt in sortOptions" :key="opt.value" :label="opt.label" :value="opt.value"/>
                             </el-select>
                         </div>
                         <div class="_dtc-cell _dtc-c-overflow">
                             <el-select v-model="element.overflow" size="small"
-                                       :placeholder="t('dataTableColumns.placeholder')" @change="emitChange">
+                                       :placeholder="t('dataTableColumns.placeholder')">
                                 <el-option v-for="opt in overflowOptions" :key="opt.value" :label="opt.label" :value="opt.value"/>
                             </el-select>
                         </div>
                         <div class="_dtc-cell _dtc-c-fixed">
                             <el-select v-model="element.fixed" clearable size="small"
-                                       :placeholder="t('dataTableColumns.placeholder')" @change="emitChange">
+                                       :placeholder="t('dataTableColumns.placeholder')">
                                 <el-option v-for="opt in fixedOptions" :key="opt.value" :label="opt.label" :value="opt.value"/>
                             </el-select>
                         </div>
                         <div class="_dtc-cell _dtc-c-align">
                             <el-select v-model="element.align" clearable size="small"
-                                       :placeholder="t('dataTableColumns.placeholder')" @change="emitChange">
+                                       :placeholder="t('dataTableColumns.placeholder')">
                                 <el-option v-for="opt in alignOptions" :key="opt.value" :label="opt.label" :value="opt.value"/>
                             </el-select>
                         </div>
                         <div class="_dtc-cell _dtc-c-render">
                             <el-select v-model="element.render" size="small"
-                                       :placeholder="t('dataTableColumns.placeholder')" @change="emitChange">
+                                       :placeholder="t('dataTableColumns.placeholder')">
                                 <el-option v-for="opt in renderOptions" :key="opt.value" :label="opt.label" :value="opt.value"/>
                             </el-select>
                         </div>
                         <div class="_dtc-cell _dtc-c-hide">
-                            <el-switch v-model="element.hide" @change="emitChange"/>
+                            <el-switch v-model="element.hide"/>
                         </div>
                         <div class="_dtc-cell _dtc-op">
                             <i class="fc-icon icon-delete _dtc-del" @click="delRow(index)"></i>
@@ -98,8 +97,8 @@
                 </div>
             </div>
             <template #footer>
-                <el-button @click="visible = false">{{ t('props.cancel') }}</el-button>
-                <el-button type="primary" @click="visible = false">{{ t('props.ok') }}</el-button>
+                <el-button @click="cancelEditor">{{ t('props.cancel') }}</el-button>
+                <el-button type="primary" @click="confirmEditor">{{ t('props.ok') }}</el-button>
             </template>
         </el-dialog>
     </div>
@@ -110,12 +109,12 @@ import {defineComponent} from 'vue';
 import draggable from 'vuedraggable/src/vuedraggable';
 import uniqueId from '@form-create/utils/lib/unique';
 import DataTableFilter from './DataTableFilter.vue';
-
-const FIELDS = ['prop', 'label', 'width', 'filter', 'className', 'sort', 'overflow', 'fixed', 'align', 'render', 'hide'];
+import errorMessage from '../utils/message';
 
 function normalizeFilter(source) {
     if (source && typeof source === 'object') {
         return {
+            ...source,
             type: source.type || '',
             options: Array.isArray(source.options) ? source.options : [],
             fetch: source.fetch && typeof source.fetch === 'object' ? source.fetch : {},
@@ -127,10 +126,11 @@ function normalizeFilter(source) {
 
 function makeColumn(source = {}) {
     return {
+        ...source,
         _id: uniqueId(),
-        prop: source.prop || '',
-        label: source.label || '',
-        width: source.width || '',
+        prop: source.prop ?? '',
+        label: source.label ?? '',
+        width: source.width ?? '',
         filter: normalizeFilter(source.filter),
         className: source.className || '',
         sort: source.sort || '',
@@ -138,7 +138,7 @@ function makeColumn(source = {}) {
         fixed: source.fixed || '',
         align: source.align || '',
         render: source.render || 'normal',
-        hide: source.hide || false,
+        hide: !!source.hide,
     };
 }
 
@@ -157,7 +157,7 @@ export default defineComponent({
         return {
             visible: false,
             list: (this.modelValue || []).map(makeColumn),
-            oldValue: JSON.stringify(this.modelValue || []),
+            editingList: [],
         };
     },
     computed: {
@@ -213,36 +213,55 @@ export default defineComponent({
     },
     watch: {
         modelValue(v) {
-            const str = JSON.stringify(v || []);
-            if (str === this.oldValue) {
-                return;
-            }
-            this.oldValue = str;
             this.list = (v || []).map(makeColumn);
+            if (!this.visible) {
+                this.editingList = [];
+            }
         },
     },
     methods: {
         clean() {
-            return this.list.map(item => {
-                return FIELDS.reduce((col, key) => {
-                    col[key] = item[key];
-                    return col;
-                }, {});
+            return this.editingList.map(item => {
+                const column = {...item};
+                delete column._id;
+                return column;
             });
         },
-        emitChange() {
+        openEditor() {
+            this.editingList = this.list.map(makeColumn);
+            this.visible = true;
+        },
+        cancelEditor() {
+            this.visible = false;
+            this.editingList = [];
+        },
+        validate() {
+            const index = this.editingList.findIndex(column => !String(column.label ?? '').trim());
+            if (index > -1) {
+                errorMessage(`${index + 1}: ${this.t('dataTableColumns.requiredError')}`);
+                return false;
+            }
+            this.editingList.forEach(column => {
+                column.label = String(column.label).trim();
+            });
+            return true;
+        },
+        confirmEditor() {
+            if (!this.validate()) {
+                return;
+            }
             const value = this.clean();
-            this.oldValue = JSON.stringify(value);
+            this.list = value.map(makeColumn);
             this.$emit('update:modelValue', value);
             this.$emit('change', value);
+            this.visible = false;
+            this.editingList = [];
         },
         addRow() {
-            this.list.push(makeColumn());
-            this.emitChange();
+            this.editingList.push(makeColumn());
         },
         delRow(idx) {
-            this.list.splice(idx, 1);
-            this.emitChange();
+            this.editingList.splice(idx, 1);
         },
     },
 });

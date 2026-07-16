@@ -46,9 +46,12 @@ export default {
     icon: 'icon-table',
     label,
     name,
-    input: false,
+    input: true,
     mask: true,
-    event: ['selectionChange', 'sortChange', 'filterChange', 'pageChange', 'cursorPageChange', 'rowClick', 'linkClick', 'actionClick'],
+    event: [
+        'selectionChange', 'sortChange', 'filterChange', 'pageChange', 'cursorPageChange',
+        'rowClick', 'linkClick', 'actionClick', 'actionSuccess', 'actionError', 'actionFinally',
+    ],
     rule({t}) {
         return {
             type: name,

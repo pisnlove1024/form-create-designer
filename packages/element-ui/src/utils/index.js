@@ -297,7 +297,10 @@ export const localeProps = (t, prefix, rules) => {
 export const getRuleTree = (children) => {
     const tree = [];
     children && children.forEach(rule => {
-        if (rule._fc_drag_tag) {
+        if (!rule) {
+            return;
+        }
+        if (rule._fc_drag_tag && rule.__fc__) {
             const item = {
                 id: rule.__fc__.id,
                 rule,

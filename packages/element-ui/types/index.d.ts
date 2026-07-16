@@ -1,6 +1,8 @@
 import {Api, Options, Rule} from "@form-create/element-ui";
 import FormCreate from "@form-create/element-ui";
-import {Component, Plugin, Ref, App} from "vue";
+import {Component, ComponentPublicInstance, Plugin, Ref, App} from "vue";
+
+export type {Api, Options, Rule} from "@form-create/element-ui";
 
 //多语言读取函数
 type t = (name, ...args) => string;
@@ -59,6 +61,138 @@ type DenyDrag = string[] | {
 }
 
 type Device = 'pc' | 'pad' | 'mobile';
+
+export type ComponentBindingKind = 'modelValue' | 'prop' | 'hybrid' | 'children' | 'none';
+
+export interface ComponentBinding {
+    kind: ComponentBindingKind;
+    prop?: string;
+    modelProp?: string;
+}
+
+export interface ComponentCapabilities {
+    input?: boolean;
+    container?: boolean;
+    overlay?: 'dialog' | 'drawer';
+    remoteData?: boolean;
+    preview?: boolean;
+    tableCell?: boolean;
+    tableColumnDefaultVisible?: boolean;
+    tableCellSummary?: 'rowCount' | string;
+    contentKind?: 'html' | 'code' | string;
+    subForm?: boolean;
+    actions?: boolean;
+    methods?: string[];
+    [name: string]: unknown;
+}
+
+export interface ComponentDefinition {
+    type: string;
+    category: 'input' | 'display' | 'composite' | 'layout' | 'overlay' | string;
+    component: Component;
+    binding: ComponentBinding;
+    capabilities: ComponentCapabilities;
+}
+
+export interface ComponentRegistration extends ComponentDefinition {
+    designerComponent?: Component;
+    dragRule?: DragRule;
+}
+
+export interface ComponentRegistrationOptions {
+    /** 已有定义内容变化时必须显式开启；相同定义重复注册会幂等返回。 */
+    override?: boolean;
+}
+
+export interface DeserializeRulesOptions {
+    /** 是否将以 function/async function 开头的普通字符串自动解析为函数，默认 true。 */
+    parsePlainFunctions?: boolean;
+}
+
+export interface DataTableActionContext<Row = Record<string, unknown>> {
+    action: DataTableAction<Row>;
+    row: Row;
+    index: number;
+    table: ComponentPublicInstance;
+    tableRef?: ComponentPublicInstance;
+    api?: Api;
+    emit: (event: string, ...args: unknown[]) => void;
+    selectedRows: Row[];
+}
+
+export interface DataTableAction<Row = Record<string, unknown>> {
+    id: string;
+    label: string;
+    type?: string;
+    size?: string;
+    decorate?: Array<'text' | 'round' | 'plain' | 'disabled' | string>;
+    hide?: boolean;
+    confirm?: boolean | string | {enabled?: boolean; message?: string; title?: string; [name: string]: unknown};
+    successMessage?: string;
+    errorMessage?: string;
+    disabledFn?: (row: Row, index: number, action: DataTableAction<Row>, context: DataTableActionContext<Row>) => boolean;
+    hiddenFn?: (row: Row, index: number, action: DataTableAction<Row>, context: DataTableActionContext<Row>) => boolean;
+    clickFn?: (row: Row, index: number, action: DataTableAction<Row>, context: DataTableActionContext<Row>) => unknown | Promise<unknown>;
+    [name: string]: unknown;
+}
+
+export declare const componentDefinitions: ReadonlyArray<Readonly<ComponentDefinition>>;
+export declare const componentDragRules: ReadonlyArray<DragRule>;
+export declare function validateComponentDefinition(definition: ComponentDefinition): Readonly<ComponentDefinition>;
+export declare function registerComponentDefinition(definition: ComponentDefinition, options?: ComponentRegistrationOptions): Readonly<ComponentDefinition>;
+export declare function registerComponentDragRule(type: string, dragRule?: DragRule, designerComponent?: Component, options?: ComponentRegistrationOptions): DragRule | undefined;
+export declare function registerComponent(registration: ComponentRegistration, options?: ComponentRegistrationOptions): Readonly<ComponentDefinition> & {designer?: DragRule; designerComponent: Component};
+export declare function getComponentDefinition(type: string): Readonly<ComponentDefinition> | undefined;
+export declare function getComponentDragRule(type: string): DragRule | undefined;
+export declare function getDesignerComponentDefinition(type: string): (Readonly<ComponentDefinition> & {
+    designer?: DragRule;
+    designerComponent: Component;
+}) | undefined;
+export declare function hasComponentDefinition(type: string): boolean;
+export declare function listComponentDefinitions(capability?: keyof ComponentCapabilities): ReadonlyArray<Readonly<ComponentDefinition>>;
+export declare function installRuntimeComponents<T extends {component(name: string, component: Component): unknown}>(target: T): T;
+export declare function installDesignerComponents<T extends {component(name: string, component: Component): unknown}>(target: T): T;
+export declare function installDesignerHtmlPreview<T extends {parser(...args: unknown[]): unknown}>(target: T): T;
+export declare function readComponentValue(rule: Rule, formData?: Record<string, unknown>): unknown;
+export declare function resolveComponentProps(rule: Rule, value?: unknown, extraProps?: Record<string, unknown>): Record<string, unknown>;
+export declare function bindRuleValue(rule: Rule, value: unknown): Rule;
+export declare function applyComponentValue(api: Api | undefined, rule: Rule, value: unknown): boolean;
+export declare function bindRuleTreeValues(rules: Rule[], formData?: Record<string, unknown>): Rule[];
+export declare function serializeRules(value: unknown, space?: number): string;
+export declare function deserializeRules<T = unknown>(value: string | T, options?: DeserializeRulesOptions): T;
+export declare const componentCodec: Readonly<{
+    serialize: typeof serializeRules;
+    deserialize: typeof deserializeRules;
+}>;
+export declare const dataTableActionDefaults: Readonly<DataTableAction>;
+export declare function normalizeDataTableAction<Row = Record<string, unknown>>(source?: Partial<DataTableAction<Row>>): DataTableAction<Row>;
+export declare function validateDataTableActions(actions: DataTableAction[]): {
+    valid: boolean;
+    code?: 'required' | 'duplicate';
+    field?: 'id' | 'label';
+    index?: number;
+};
+
+export interface ComponentRuntime {
+    componentDefinitions: typeof componentDefinitions;
+    validateComponentDefinition: typeof validateComponentDefinition;
+    registerComponentDefinition: typeof registerComponentDefinition;
+    getComponentDefinition: typeof getComponentDefinition;
+    hasComponentDefinition: typeof hasComponentDefinition;
+    listComponentDefinitions: typeof listComponentDefinitions;
+    installRuntimeComponents: typeof installRuntimeComponents;
+    readComponentValue: typeof readComponentValue;
+    resolveComponentProps: typeof resolveComponentProps;
+    bindRuleValue: typeof bindRuleValue;
+    applyComponentValue: typeof applyComponentValue;
+    bindRuleTreeValues: typeof bindRuleTreeValues;
+    serializeRules: typeof serializeRules;
+    deserializeRules: typeof deserializeRules;
+    componentCodec: typeof componentCodec;
+    dataTableActionDefaults: typeof dataTableActionDefaults;
+    normalizeDataTableAction: typeof normalizeDataTableAction;
+    validateDataTableActions: typeof validateDataTableActions;
+}
 
 //设计器组件的props.config配置
 export interface Config {
@@ -264,7 +398,7 @@ export interface DragRule {
     //判断组件是否可以拖入
     checkDrag?: (drag: {rule: Rule | undefined, menu: DragRule, toRule: Rule, toMenu: DragRule})=> boolean;
     //多语言配置项
-    languageKey: string[];
+    languageKey?: string[];
 
     //组件的生成规则
     rule(arg: { t: t }): Rule;
@@ -353,10 +487,10 @@ export type DescriptionData = Array<{
 }>
 
 //用于预览的渲染器
-export type formCreate = FormCreate;
+export declare const formCreate: typeof FormCreate;
 
 //用于设计的渲染器
-export type designerForm = FormCreate;
+export declare const designerForm: typeof FormCreate;
 
 //复制内容
 export type copyTextToClipboard = (text: string) => void;
@@ -389,7 +523,7 @@ export type toJSON = (obj: Object) => string;
 export type addMenu = (menu: Menu | Menu[], before?: boolean) => void;
 
 //全局导入拖拽规则
-export type addDragRule = (menu: DragRule | DragTemplateRule | Array<DragRule | DragTemplateRule>, before?: boolean) => void;
+export type addDragRule = (menu: DragRule | DragRule[], before?: boolean) => void;
 
 type Utils = {
 
@@ -427,10 +561,11 @@ interface FcDesignerProtoType {
     t: t;
     utils: Utils;
     //用于预览的渲染器
-    formCreate: formCreate;
+    formCreate: typeof FormCreate;
     //用于设计的渲染器
-    designerForm: designerForm;
-
+    designerForm: typeof FormCreate;
+    //组件注册、值绑定、预览和序列化的公共能力
+    componentRuntime: ComponentRuntime;
     //复制内容
     copyTextToClipboard: copyTextToClipboard;
 
@@ -467,6 +602,9 @@ interface FcDesignerProtoType {
     //往渲染器中挂载组件
     component(name: string, component: Component, previewComponent?: Component): void;
 
+    //统一注册运行组件、设计器组件、拖拽规则和能力定义
+    registerComponent: typeof registerComponent;
+
     //设置默认的多语言
     useLocale(locale: Object): {
         name: Ref<string>;
@@ -478,6 +616,14 @@ interface FcDesignerProtoType {
     //挂载组件
     install: (app: App, ...options: any[]) => any;
 }
+
+export declare const FcComponentPreview: import("vue").DefineComponent<{
+    rule: Rule;
+    value?: unknown;
+    formData?: Record<string, unknown>;
+    componentProps?: Record<string, unknown>;
+    mode?: 'default' | 'tableCell' | string;
+}>;
 
 //设计器组件
 export declare const FcDesigner: import("vue").DefineComponent<{

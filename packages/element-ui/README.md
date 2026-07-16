@@ -87,6 +87,11 @@ app.use(FcDesigner.formCreate)
 <fc-designer ref="designer"/>
 ```
 
+CG 扩展组件的运行时注册、能力清单、统一值绑定、预览、JSON codec，以及 `fcDataTable`
+行操作契约见 [COMPONENT-RUNTIME.md](./COMPONENT-RUNTIME.md)。这些能力由组件包自身提供，消费方不需要复制组件类型判断。
+默认设计器 example 已使用最新组件规则；在 example 地址后追加 `?runtime-verification`，可独立验证真实组件预览、
+统一值绑定契约、第三方能力注册和 `fcDataTable` 行操作生命周期。
+
 ## 联系
 
 ![http://static.form-create.com/file/img/support.jpg](http://static.form-create.com/file/img/support.jpg)
