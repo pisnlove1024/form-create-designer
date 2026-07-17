@@ -39,6 +39,8 @@
     ],
     "files": [
         "README.md",
+        "COMPONENT-RUNTIME.md",
+        "UPGRADE.md",
         "package.json",
         "LICENSE",
         "src",

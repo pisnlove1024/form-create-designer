@@ -19,6 +19,39 @@ function numericValue(value) {
     return Number.isFinite(number) ? number : 0;
 }
 
+const FULL_OPTION_KEYS = new Set([
+    'xAxis',
+    'yAxis',
+    'dataset',
+    'radar',
+    'visualMap',
+    'angleAxis',
+    'radiusAxis',
+    'polar',
+    'geo',
+    'calendar',
+    'parallel',
+    'singleAxis',
+    'graphic',
+    'dataZoom',
+    'toolbox',
+    'brush',
+]);
+
+/**
+ * FcChart supports both its compact {category, series} contract and a JSON-safe
+ * ECharts option. Root ECharts keys take precedence. A series-only option is
+ * considered complete only when it has an explicit ECharts series type and no
+ * compact category field, avoiding ambiguity with compact chart data.
+ */
+function isFullEChartsOption(value) {
+    if (!value || typeof value !== 'object' || Array.isArray(value)) return false;
+    if (Object.keys(value).some(key => FULL_OPTION_KEYS.has(key))) return true;
+    return !Object.prototype.hasOwnProperty.call(value, 'category')
+        && Array.isArray(value.series)
+        && value.series.some(item => item && typeof item === 'object' && typeof item.type === 'string' && item.type.trim());
+}
+
 function buildProportionData(data) {
     const category = Array.isArray(data.category) ? data.category : [];
     const series = Array.isArray(data.series) ? data.series : [];
@@ -276,6 +309,11 @@ export default defineComponent({
         const renderChart = () => {
             if (!chart) return;
             const data = props.modelValue == null ? props.chartData : props.modelValue;
+            if (isFullEChartsOption(data)) {
+                empty.value = false;
+                chart.setOption(JSON.parse(JSON.stringify(data)), true);
+                return;
+            }
             if (!data || !Array.isArray(data.series)
                 || !data.series.some(item => item && Array.isArray(item.data) && item.data.length > 0)) {
                 empty.value = true;

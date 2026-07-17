@@ -39,6 +39,13 @@
                         :component-props="{height: '260px'}"/>
                 </article>
                 <article class="preview-card">
+                    <h3>hybrid binding: fcChart full ECharts option</h3>
+                    <FcComponentPreview
+                        :rule="fullOptionChartPreviewRule"
+                        :form-data="previewFormData"
+                        :component-props="{height: '260px'}"/>
+                </article>
+                <article class="preview-card">
                     <h3>third-party registration: fcExampleMetric</h3>
                     <FcComponentPreview :rule="metricPreviewRule" :form-data="previewFormData"/>
                 </article>
@@ -176,6 +183,20 @@ export default defineComponent({
                     category: ['A', 'B', 'C'],
                     series: [{name: 'modelValue', data: [3, 6, 9]}],
                 },
+                previewFullOptionChart: {
+                    tooltip: {trigger: 'axis'},
+                    dataset: {
+                        source: [
+                            ['month', 'Revenue', 'Cost'],
+                            ['Jan', 120, 80],
+                            ['Feb', 200, 110],
+                            ['Mar', 150, 90],
+                        ],
+                    },
+                    xAxis: {type: 'category'},
+                    yAxis: {type: 'value'},
+                    series: [{type: 'bar'}, {type: 'line', smooth: true}],
+                },
                 metric: 88,
             },
             titlePreviewRule: {
@@ -193,6 +214,14 @@ export default defineComponent({
                         category: ['legacy'],
                         series: [{name: 'legacy fallback', data: [1]}],
                     },
+                },
+            },
+            fullOptionChartPreviewRule: {
+                type: 'fcChart',
+                field: 'previewFullOptionChart',
+                props: {
+                    chartName: 'Full ECharts option',
+                    chartDescription: 'dataset, axes, tooltip and mixed series are passed through unchanged.',
                 },
             },
             metricPreviewRule: {
@@ -242,6 +271,7 @@ export default defineComponent({
         updatePreviewValue() {
             const current = JSON.parse(this.previewFormData.previewCode);
             this.previewFormData = {
+                ...this.previewFormData,
                 previewCode: JSON.stringify({source: 'modelValue', updated: current.updated + 1}, null, 2),
                 previewChart: {
                     category: ['A', 'B', 'C'],

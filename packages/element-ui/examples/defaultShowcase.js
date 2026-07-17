@@ -62,6 +62,9 @@ const SHOWCASE_LANGUAGE = {
         channelChart: '线索来源占比',
         channelChartName: '线索来源占比',
         channelChartDesc: '全局数据源驱动的饼图。',
+        fullOptionChart: '完整 ECharts 配置',
+        fullOptionChartName: '收入与成本对比',
+        fullOptionChartDesc: '直接传入完整 ECharts option（dataset、坐标轴、tooltip 与混合 bar/line 系列），组件原样透传渲染。',
         codePreview: '配置示例',
         codePreviewName: 'JSON 配置片段',
         codePreviewDesc: '展示全局数据、全局方法和语言配置的组合方式。',
@@ -256,6 +259,9 @@ const SHOWCASE_LANGUAGE = {
         channelChart: 'Lead Source Share',
         channelChartName: 'Lead Source Share',
         channelChartDesc: 'Pie chart driven by a global data source.',
+        fullOptionChart: 'Full ECharts Option',
+        fullOptionChartName: 'Revenue vs Cost',
+        fullOptionChartDesc: 'Pass a full ECharts option (dataset, axes, tooltip, and mixed bar/line series) rendered by the component as-is.',
         codePreview: 'Config Example',
         codePreviewName: 'JSON Config Snippet',
         codePreviewDesc: 'Shows global data, global methods, and language config together.',
@@ -401,6 +407,95 @@ const TREND_DATA = {
     series: [
         {name: '销售额', data: [120, 142, 168, 156, 188, 215]},
         {name: '目标', data: [110, 135, 150, 165, 180, 200]},
+    ],
+};
+
+const FULL_OPTION_CHART = {
+    title: {
+        text: '2024 经营概览',
+        subtext: '收入 / 成本 / 毛利率',
+        left: 'center',
+        textStyle: {fontSize: 14},
+        subtextStyle: {fontSize: 11},
+    },
+    tooltip: {
+        trigger: 'axis',
+        axisPointer: {type: 'cross'},
+    },
+    legend: {
+        top: 56,
+        data: ['收入', '成本', '毛利率'],
+    },
+    grid: {left: 48, right: 56, top: 96, bottom: 56},
+    dataZoom: [
+        {type: 'inside', start: 0, end: 100},
+        {type: 'slider', height: 16, bottom: 12},
+    ],
+    xAxis: [
+        {
+            type: 'category',
+            data: ['1月', '2月', '3月', '4月', '5月', '6月', '7月', '8月'],
+            axisTick: {alignWithLabel: true},
+        },
+    ],
+    yAxis: [
+        {
+            type: 'value',
+            name: '金额 (万)',
+            axisLabel: {formatter: '{value}'},
+            splitLine: {lineStyle: {type: 'dashed'}},
+        },
+        {
+            type: 'value',
+            name: '毛利率',
+            min: 0,
+            max: 100,
+            axisLabel: {formatter: '{value}%'},
+            splitLine: {show: false},
+        },
+    ],
+    series: [
+        {
+            name: '收入',
+            type: 'bar',
+            stack: 'amount',
+            emphasis: {focus: 'series'},
+            itemStyle: {
+                color: {
+                    type: 'linear',
+                    x: 0, y: 0, x2: 0, y2: 1,
+                    colorStops: [
+                        {offset: 0, color: '#4facfe'},
+                        {offset: 1, color: '#00f2fe'},
+                    ],
+                },
+            },
+            data: [120, 200, 150, 180, 240, 210, 260, 300],
+            markPoint: {data: [{type: 'max', name: '峰值'}]},
+        },
+        {
+            name: '成本',
+            type: 'bar',
+            stack: 'amount',
+            emphasis: {focus: 'series'},
+            itemStyle: {color: '#f6a192'},
+            data: [80, 110, 90, 120, 150, 130, 160, 190],
+        },
+        {
+            name: '毛利率',
+            type: 'line',
+            yAxisIndex: 1,
+            smooth: true,
+            symbol: 'circle',
+            symbolSize: 8,
+            lineStyle: {width: 3},
+            itemStyle: {color: '#67c23a'},
+            data: [33, 45, 40, 33, 38, 38, 38, 37],
+            markLine: {
+                data: [{type: 'average', name: '平均毛利率'}],
+                label: {formatter: '均值 {c}%'},
+            },
+        },
     ],
 };
 
@@ -1129,6 +1224,20 @@ function codeChartTab(t) {
                     chartData: clone(GLOBAL_DATA.chartChannel),
                 },
                 style: {width: '100%', height: '320px'},
+            },
+            {
+                type: 'fcChart',
+                _fc_drag_tag: 'fcChart',
+                _fc_id: 'show_full_option_chart',
+                field: 'fullOptionChart',
+                title: t('fullOptionChart'),
+                value: clone(FULL_OPTION_CHART),
+                props: {
+                    chartName: t('fullOptionChartName'),
+                    chartDescription: t('fullOptionChartDesc'),
+                },
+                effect: {fetch: ''},
+                style: {width: '100%', height: '400px'},
             },
             {
                 type: 'fcCodePreview',
