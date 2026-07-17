@@ -4,7 +4,7 @@
             <el-button :size="size" style="width: 150px;" @click="changeType()">{{ unit[idx] }}</el-button>
         </template>
         <template v-else>
-            <el-inputNumber :size="size" v-model="num" @change="submit" controls-position="right"/>
+            <el-inputNumber :size="size" v-model="num" @change="submit" @keydown.enter="submit" controls-position="right"/>
             <el-dropdown trigger="click" size="small">
                 <el-button :size="size">{{ unit[idx] }}</el-button>
                 <template #dropdown>

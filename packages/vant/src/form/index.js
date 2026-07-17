@@ -4,6 +4,7 @@ import FcTitle from '../components/FcTitle.vue';
 import SignaturePad from '../components/SignaturePad.vue';
 import TableForm from '../components/tableForm/TableForm.vue';
 import Table from '../components/table/Table.vue';
+import '../style/icon.css';
 
 const install = (formCreate) => {
     formCreate.component('FcEditor', FcEditor);

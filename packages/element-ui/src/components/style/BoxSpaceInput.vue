@@ -5,13 +5,13 @@
                 {{ t('style.margin') }}
             </span>
             <input class="_fd-input _fd-top" placeholder="        " :value="boxStyle.marginTop" type="text"
-                   @blur="(e)=>setValue('margin','Top', e)" @input="(e)=>change('marginTop', e)">
+                   @blur="(e)=>setValue('margin','Top', e)" @input="(e)=>change('marginTop', e)" @keydown.enter="(e)=>setValue('margin','Top', e)">
             <input class="_fd-input _fd-right" placeholder="        " :value="boxStyle.marginRight" type="text"
-                   @blur="(e)=>setValue('margin','Right', e)" @input="(e)=>change('marginRight', e)">
+                   @blur="(e)=>setValue('margin','Right', e)" @input="(e)=>change('marginRight', e)" @keydown.enter="(e)=>setValue('margin','Right', e)">
             <input class="_fd-input _fd-bottom" placeholder="        " :value="boxStyle.marginBottom" type="text"
-                   @blur="(e)=>setValue('margin','Bottom', e)" @input="(e)=>change('marginBottom', e)">
+                   @blur="(e)=>setValue('margin','Bottom', e)" @input="(e)=>change('marginBottom', e)" @keydown.enter="(e)=>setValue('margin','Bottom', e)">
             <input class="_fd-input _fd-left" placeholder="        " :value="boxStyle.marginLeft" type="text"
-                   @blur="(e)=>setValue('margin','Left', e)" @input="(e)=>change('marginLeft', e)">
+                   @blur="(e)=>setValue('margin','Left', e)" @input="(e)=>change('marginLeft', e)" @keydown.enter="(e)=>setValue('margin','Left', e)">
             <div class="_fd-help">
                 <i class="fc-icon icon-link2" title="lock" :class="marginLock ? 'active' : ''"
                    @click="lock('margin')"></i>
@@ -27,13 +27,13 @@
                     <i class="fc-icon icon-delete-circle" title="clear" @click="clear('padding')"></i>
                 </div>
                 <input class="_fd-input _fd-top" placeholder="        " :value="boxStyle.paddingTop" type="text"
-                       @blur="(e)=>setValue('padding','Top', e)" @input="(e)=>change('paddingTop', e)">
+                       @blur="(e)=>setValue('padding','Top', e)" @input="(e)=>change('paddingTop', e)" @keydown.enter="(e)=>setValue('padding','Top', e)">
                 <input class="_fd-input _fd-right" placeholder="        " :value="boxStyle.paddingRight" type="text"
-                       @blur="(e)=>setValue('padding','Right', e)" @input="(e)=>change('paddingRight', e)">
+                       @blur="(e)=>setValue('padding','Right', e)" @input="(e)=>change('paddingRight', e)" @keydown.enter="(e)=>setValue('padding','Right', e)">
                 <input class="_fd-input _fd-bottom" placeholder="        " :value="boxStyle.paddingBottom" type="text"
-                       @blur="(e)=>setValue('padding','Bottom', e)" @input="(e)=>change('paddingBottom', e)">
+                       @blur="(e)=>setValue('padding','Bottom', e)" @input="(e)=>change('paddingBottom', e)" @keydown.enter="(e)=>setValue('padding','Bottom', e)">
                 <input class="_fd-input _fd-left" placeholder="        " :value="boxStyle.paddingLeft" type="text"
-                       @blur="(e)=>setValue('padding','Left', e)" @input="(e)=>change('paddingLeft', e)">
+                       @blur="(e)=>setValue('padding','Left', e)" @input="(e)=>change('paddingLeft', e)" @keydown.enter="(e)=>setValue('padding','Left', e)">
                 <div class="_box">
                 </div>
             </div>

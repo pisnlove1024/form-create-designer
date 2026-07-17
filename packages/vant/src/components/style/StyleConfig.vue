@@ -5,9 +5,7 @@
         <ConfigItem :label="t('style.color')">
             <ColorInput v-model="color" @change="onInput"></ColorInput>
         </ConfigItem>
-        <ConfigItem :label="t('style.backgroundColor')">
-            <ColorInput v-model="backgroundColor" @change="onInput"></ColorInput>
-        </ConfigItem>
+        <BackgroundInput v-model="background" @change="onInput"></BackgroundInput>
         <BorderInput v-model="border" @change="onInput"></BorderInput>
         <RadiusInput v-model="radius" @change="onInput"/>
         <FontInput v-model="font" @change="onInput"/>
@@ -49,6 +47,7 @@ import TableOptions from '../TableOptions.vue';
 import PositionInput from './PositionInput.vue';
 import toLine from '@form-create/utils/lib/toline';
 import toCase from "@form-create/utils/lib/tocase";
+import BackgroundInput from './BackgroundInput.vue';
 
 const fontKey = [
     'fontFamily',
@@ -69,6 +68,8 @@ const positionKey = [
     'right',
 ];
 
+const backgroundKey = ['backgroundColor', 'backgroundImage', 'backgroundSize', 'backgroundPosition', 'backgroundRepeat'];
+
 const sizeKey = [
     'height',
     'width',
@@ -81,7 +82,6 @@ const sizeKey = [
 
 const styleKey = [
     'color',
-    'backgroundColor',
     'scale',
     'borderRadius',
     'boxShadow',
@@ -114,6 +114,7 @@ const styleKey = [
     ...fontKey,
     ...sizeKey,
     ...positionKey,
+    ...backgroundKey,
 ];
 
 export default defineComponent({
@@ -131,6 +132,7 @@ export default defineComponent({
         BorderInput,
         ShadowInput,
         FontInput,
+        BackgroundInput,
     },
     props: {
         modelValue: {
@@ -153,8 +155,8 @@ export default defineComponent({
             border: {},
             font: {},
             position: {},
+            background: {},
             radius: '',
-            backgroundColor: '',
             color: '',
             boxShadow: '',
             opacity: 100,
@@ -218,6 +220,13 @@ export default defineComponent({
                     font[k] = style[k];
                 }
             });
+
+            const background = {};
+            backgroundKey.forEach(k => {
+                if (style[k]) {
+                    background[k] = style[k];
+                }
+            });
             this.opacity = opacity;
             this.scale = scale;
             this.size = size;
@@ -225,9 +234,9 @@ export default defineComponent({
             this.space = space;
             this.border = border;
             this.font = font;
+            this.background = background;
             this.boxShadow = style.boxShadow || '';
             this.color = style.color || '';
-            this.backgroundColor = style.backgroundColor || '';
             styleKey.forEach(k => {
                 delete style[k];
             })
@@ -252,12 +261,11 @@ export default defineComponent({
             const style = {
                 ...temp,
                 color: this.color || '',
-                backgroundColor: this.backgroundColor || '',
                 opacity: (this.opacity >= 0 && this.opacity < 100) ? (this.opacity + '%') : '',
                 borderRadius: this.radius || '',
                 boxShadow: this.boxShadow || '',
                 scale: (this.scale >= 0 && this.scale !== 100) ? (this.scale + '%') : '',
-                ...this.space, ...this.size, ...this.border, ...this.font, ...this.position, ...overStyle
+                ...this.space, ...this.size, ...this.border, ...this.font, ...this.position, ...this.background, ...overStyle
             }
             Object.keys(style).forEach(k => {
                 if (isNull(style[k])) {

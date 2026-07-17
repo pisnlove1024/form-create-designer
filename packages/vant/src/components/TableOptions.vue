@@ -16,7 +16,8 @@
                         <template v-else>
                             <el-input :size="size || 'small'" :disabled="disabled" :modelValue="scope.row[col.key] || ''"
                                       @Update:modelValue="(n)=>(scope.row[col.key] = n)"
-                                      @blur="onInput(scope.row)"></el-input>
+                                      @blur="onInput(scope.row)"
+                                      @keydown.enter="onInput(scope.row)"></el-input>
                         </template>
                     </template>
                 </el-table-column>

@@ -211,7 +211,7 @@ export default {
         },
         token() {
             let token = this.designer.props.config?.ai?.token || '';
-            if (token.indexOf('Bearer') === -1) {
+            if (token && token.indexOf('Bearer') === -1) {
                 token = `Bearer ${token}`;
             }
             return token;

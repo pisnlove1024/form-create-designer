@@ -11,6 +11,258 @@
     -moz-osx-font-smoothing: grayscale;
 }
 
+.icon-config:before {
+    content: '\e724';
+}
+
+.icon-ai-chat:before {
+    content: '\e602';
+}
+
+.icon-caret-right:before {
+    content: '\e601';
+}
+
+.icon-ai2:before {
+    content: '\e725';
+}
+
+.icon-dropdown:before {
+    content: '\e722';
+}
+
+.icon-vxe-table:before {
+    content: '\e723';
+}
+
+.icon-import-file:before {
+    content: '\e6fc';
+}
+
+.icon-paragraph:before {
+    content: '\e720';
+}
+
+.icon-cryingface:before {
+    content: '\e700';
+}
+
+.icon-service:before {
+    content: '\e706';
+}
+
+.icon-add3:before {
+    content: '\e707';
+}
+
+.icon-collect:before {
+    content: '\e708';
+}
+
+.icon-balance:before {
+    content: '\e709';
+}
+
+.icon-bulletin:before {
+    content: '\e70a';
+}
+
+.icon-inquiry:before {
+    content: '\e70b';
+}
+
+.icon-lock:before {
+    content: '\e70c';
+}
+
+.icon-liking:before {
+    content: '\e70d';
+}
+
+.icon-like:before {
+    content: '\e70e';
+}
+
+.icon-reduce:before {
+    content: '\e70f';
+}
+
+.icon-idcard:before {
+    content: '\e710';
+}
+
+.icon-scanning:before {
+    content: '\e711';
+}
+
+.icon-bankcard:before {
+    content: '\e712';
+}
+
+.icon-download:before {
+    content: '\e713';
+}
+
+.icon-smileyface:before {
+    content: '\e714';
+}
+
+.icon-pet:before {
+    content: '\e715';
+}
+
+.icon-notinterested:before {
+    content: '\e716';
+}
+
+.icon-share:before {
+    content: '\e717';
+}
+
+.icon-data1:before {
+    content: '\e718';
+}
+
+.icon-edit1:before {
+    content: '\e719';
+}
+
+.icon-female:before {
+    content: '\e71a';
+}
+
+.icon-forward:before {
+    content: '\e71b';
+}
+
+.icon-subscription:before {
+    content: '\e71c';
+}
+
+.icon-person:before {
+    content: '\e71d';
+}
+
+.icon-male:before {
+    content: '\e71e';
+}
+
+.icon-unlock:before {
+    content: '\e71f';
+}
+
+.icon-mark:before {
+    content: '\e705';
+}
+
+.icon-play:before {
+    content: '\e6f1';
+}
+
+.icon-log:before {
+    content: '\e6f2';
+}
+
+.icon-savedocument:before {
+    content: '\e6f3';
+}
+
+.icon-permissions:before {
+    content: '\e6f4';
+}
+
+.icon-businesstrip:before {
+    content: '\e6f5';
+}
+
+.icon-documentexchange:before {
+    content: '\e6f6';
+}
+
+.icon-resumelibrary:before {
+    content: '\e6f7';
+}
+
+.icon-statistics:before {
+    content: '\e6f8';
+}
+
+.icon-supervision:before {
+    content: '\e6f9';
+}
+
+.icon-news:before {
+    content: '\e6fa';
+}
+
+.icon-review:before {
+    content: '\e6fb';
+}
+
+.icon-usb:before {
+    content: '\e6fd';
+}
+
+.icon-contacts:before {
+    content: '\e6fe';
+}
+
+.icon-bill:before {
+    content: '\e6ff';
+}
+
+.icon-process:before {
+    content: '\e701';
+}
+
+.icon-mouse:before {
+    content: '\e702';
+}
+
+.icon-send1:before {
+    content: '\e703';
+}
+
+.icon-transactions:before {
+    content: '\e704';
+}
+
+.icon-application:before {
+    content: '\e6e8';
+}
+
+.icon-bag:before {
+    content: '\e6e9';
+}
+
+.icon-audio1:before {
+    content: '\e6ea';
+}
+
+.icon-askforleave:before {
+    content: '\e6eb';
+}
+
+.icon-birthday:before {
+    content: '\e6ec';
+}
+
+.icon-comment:before {
+    content: '\e6ed';
+}
+
+.icon-documents:before {
+    content: '\e6ee';
+}
+
+.icon-email:before {
+    content: '\e6ef';
+}
+
+.icon-expediting:before {
+    content: '\e6f0';
+}
+
 .icon-vue:before {
     content: '\e6e7';
 }
@@ -145,7 +397,7 @@
     content: '\e6cb';
 }
 
-.icon-ai.bright {
+.fc-icon.bright {
     background: linear-gradient(to right, #328ff7, #62e3a3);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;

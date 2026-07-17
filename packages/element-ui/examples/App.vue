@@ -17,8 +17,11 @@
                     <a href="https://form-create.com/v3/mobile" class="item">移动端设计器</a>
                     <a href="https://pro.form-create.com/view" class="item pro-version">高级版🔥</a>
                     <a href="https://view.form-create.com/" target="_blank" class="item">文档</a>
+                    <a href="https://view.form-create.com/skills" target="_blank" class="item">Agent Skills</a>
+                    <a href="https://www.form-create.com/service/example" target="_blank" class="item">更多示例</a>
                     <a href="https://form-create.com/designer" target="_blank" class="item">Vue2版本</a>
                     <a href="https://github.com/xaboy/form-create-designer" target="_blank" class="item">查看源码</a>
+                    <ApiKeyInput @save="onApiKeySave" />
                 </div>
             </div>
         </div>
@@ -118,6 +121,7 @@ import arrowDown from "@element-plus/icons-vue/dist/es/arrow-down.mjs";
 import {copyTextToClipboard} from "../src/utils";
 import ConfigPanel from "./components/ConfigPanel.vue";
 import {getShowcaseOption, getShowcaseRule} from "./defaultShowcase";
+import ApiKeyInput from './components/ApiKeyInput.vue';
 
 const CACHE_KEY = 'fc-config-$101';
 const TITLE = ['生成规则', '表单规则', '生成组件', '设置生成规则', '设置表单规则'];
@@ -127,6 +131,7 @@ export default {
     components: {
         ConfigPanel,
         arrowDown,
+        ApiKeyInput,
     },
     data() {
         let data = window.location.hash.substring(1);
@@ -152,8 +157,86 @@ export default {
             topImg: true,
             config: {
                 autoActive: true,
+                ai: {
+                    api: 'https://api.form-create.com/ai/v2/demo/chat',
+                },
                 fieldReadonly: false,
                 showSaveBtn: true,
+                fieldList: [
+                    {
+                        value: 'goods',
+                        label: '商品表',
+                        selectable: false,
+                        children: [
+                            {
+                                value: 'goods_id',
+                                label: '商品ID',
+                            },
+                            {
+                                value: 'goods_name',
+                                label: '商品名称',
+                            },
+                            {
+                                value: 'goods_info',
+                                label: '商品简介',
+                            },
+                            {
+                                value: 'goods_cate',
+                                label: '商品分类',
+                            },
+                            {
+                                value: 'goods_update_time',
+                                label: '商品上架时间',
+                            },
+                        ],
+                    },
+                    {
+                        value: 'user',
+                        label: '用户表',
+                        selectable: false,
+                        children: [
+                            {
+                                value: 'user_id',
+                                label: '用户ID',
+                            },
+                            {
+                                value: 'phone',
+                                label: '手机号',
+                            },
+                            {
+                                value: 'username',
+                                label: '用户名称',
+                            },
+                            {
+                                value: 'user_mark',
+                                label: '用户备注',
+                            },
+                            {
+                                value: 'avatar',
+                                label: '用户头像',
+                            },
+                        ],
+                    },
+                    {
+                        value: 'order',
+                        label: '订单表',
+                        selectable: false,
+                        children: [
+                            {
+                                value: 'order_id',
+                                label: '订单ID',
+                            },
+                            {
+                                value: 'order_sn',
+                                label: '订单号',
+                            },
+                            {
+                                value: 'order_time',
+                                label: '订单时间',
+                            },
+                        ],
+                    },
+                ],
             },
             handle: [
                 {
@@ -185,6 +268,17 @@ export default {
         },
         goPro() {
             location.href = 'https://pro.form-create.com/view';
+        },
+        onApiKeySave(apiKey) {
+            if (apiKey) {
+                this.config.ai = {
+                    token: `Bearer ${apiKey}`,
+                };
+            } else {
+                this.config.ai = {
+                    api: 'https://api.form-create.com/ai/v2/demo/chat',
+                };
+            }
         },
         panelChange(config) {
             if (config.locale === 'en') {
@@ -297,7 +391,7 @@ export default {
             const rule = this.$refs.designer.getJson();
             const options = this.$refs.designer.getOptionsJson();
             const str = btoa(unescape(encodeURIComponent(JSON.stringify({rule, options}))));
-            copyTextToClipboard('https://form-create.com/v3/designer#' + str);
+            copyTextToClipboard(location.origin + location.pathname + '#' + str);
         },
         onOk() {
             if (this.err) return;

@@ -1,5 +1,5 @@
 <template>
-    <el-input class="_fd-value-input" :disabled="disabled" v-model="value" @blur="onBlur" v-bind="$attrs">
+    <el-input class="_fd-value-input" :disabled="disabled" v-model="value" @blur="onBlur" @keydown.enter="updateValue(value)" v-bind="$attrs">
         <template #prepend>
             <el-select v-model="type" style="width: 60px" :disabled="disabled">
                 <el-option :label="t('validate.types.string')" value="1"/>

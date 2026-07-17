@@ -8,6 +8,11 @@ export default function form({t}) {
             value: '',
             title: t('form.formName'),
         }, {
+            type: 'input',
+            field: 'class',
+            value: '',
+            title: 'Class',
+        }, {
             type: 'select',
             field: 'labelAlign',
             title: t('form.labelAlign'),
@@ -94,6 +99,11 @@ export default function form({t}) {
                     {
                         name: 'onMounted',
                         info: t('form.onMounted'),
+                        args: ['api'],
+                    },
+                    {
+                        name: 'onBeforeUnmount',
+                        info: t('form.onBeforeUnmount'),
                         args: ['api'],
                     },
                     {

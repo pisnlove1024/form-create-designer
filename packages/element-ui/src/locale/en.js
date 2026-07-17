@@ -29,6 +29,7 @@ const En = {
         onReset: 'Triggered after form is reset',
         onCreated: 'Triggered after the form component is initialized',
         onMounted: 'Triggered after the form component is mounted',
+        onBeforeUnmount: 'Triggered before the form component is unmounted',
         onReload: 'Triggered after the form rendering rule is reloaded',
         onChange: 'Triggered when the component value changes',
         beforeSubmit: 'Triggered when form validation passed',
@@ -225,6 +226,7 @@ const En = {
     },
     struct: {
         title: 'Edit',
+        editText: 'Edit text',
         only: '[{label}] Only one allowed to be added',
         errorMsg: 'The input content is syntactically incorrect',
         configured: 'Configured',
@@ -274,6 +276,7 @@ const En = {
         validateFail: 'Triggered when table verification fails',
         hook_load: 'Triggered after component rules are loaded',
         hook_mounted: 'Triggered after component is mounted',
+        hook_beforeUnmount: 'Triggered before the component is unmounted',
         hook_deleted: 'Triggered after component rules are removed',
         hook_watch: 'Triggered after component rules change',
         hook_value: 'Triggered after component value changes',
@@ -317,6 +320,8 @@ const En = {
             fetch: 'Fetch',
             struct: 'Static',
             global: 'Global',
+            text: 'Text',
+            json: 'JSON',
         },
         preview: 'Preview Response Data',
         test: 'Test Request',
@@ -399,7 +404,29 @@ const En = {
             400: 'Default',
             500: 'Medium',
             700: 'Bold',
-        }
+        },
+        background: {
+            name: 'Background',
+            image: 'Background Image',
+            placeholder: 'Enter image URL',
+            select: 'Select',
+            size: {
+                name: 'Size',
+                cover: 'Cover',
+                contain: 'Contain',
+                auto: 'Auto',
+            },
+            position: 'Position',
+            repeat: {
+                name: 'Repeat',
+                'no-repeat': 'No Repeat',
+                repeat: 'Repeat',
+                'repeat-x': 'Repeat X',
+                'repeat-y': 'Repeat Y',
+                round: 'Round',
+                space: 'Space',
+            },
+        },
     },
     designer: {
         component: 'Component',
@@ -465,6 +492,7 @@ const En = {
         reset: 'Reset',
         copy: 'Copy',
         import: 'Import',
+        export: 'Export',
         delete: 'Delete',
         hide: 'Hidden',
         show: 'Show',
@@ -959,6 +987,8 @@ const En = {
             name: 'Table',
             props: {
                 border: 'Whether to display border',
+                mini: 'Compact Mode',
+                formStyle: 'Table form style',
                 borderColor: 'Border color',
                 borderWidth: 'Border width'
             }
@@ -970,6 +1000,8 @@ const En = {
             name: 'Signature',
             info: 'Callback function before removing signature, return false to prevent removal',
             props: {
+                tip: 'Signature tip text',
+                padTitle: 'Dialog title',
                 penColor: 'Line color',
                 disabled: 'Disabled',
                 beforeRemove: 'Before remove callback',
@@ -1132,13 +1164,16 @@ const En = {
         },
         tableForm: {
             name: 'TableForm',
+            info: 'Callback before deleting a table row, return false to prevent deletion',
             props: {
                 disabled: 'Disabled',
                 filterEmptyColumn: 'Whether to filter empty rows',
                 max: 'Maximum number of rows to add, if 0, there is no limit',
                 min: 'Minimum number of rows to add',
+                showIndex: 'Display line number',
                 addable: 'Allow to add',
                 deletable: 'Allow delete',
+                beforeRemove: 'Before remove callback',
             }
         },
         tableFormColumn: {

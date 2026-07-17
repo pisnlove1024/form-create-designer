@@ -163,6 +163,7 @@ export default defineComponent({
                 newItem[key] = '';
             }
             this.validate.push(newItem);
+            this.onInput();
         },
         autoMessage(item) {
             const title = this.designer.setupState.activeRule.title;

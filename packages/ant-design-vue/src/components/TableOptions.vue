@@ -18,7 +18,8 @@
                         </template>
                         <template v-else>
                             <a-input :size="size || 'small'" v-model:value="scope.record[scope.column.key]" :disabled="disabled"
-                                     @blur="onInput(scope.record)"></a-input>
+                                     @blur="onInput(scope.record)"
+                                     @keydown.enter="onInput(scope.record)"></a-input>
                         </template>
                     </template>
                     <template v-else-if="!disabled">

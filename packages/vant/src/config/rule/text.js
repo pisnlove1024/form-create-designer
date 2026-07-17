@@ -30,7 +30,6 @@ export default {
     },
     props(_, {t}) {
         return localeProps(t, name + '.props', [
-            ...makeTitleRule(t),
             {
                 type: 'input',
                 field: 'formCreateChild',

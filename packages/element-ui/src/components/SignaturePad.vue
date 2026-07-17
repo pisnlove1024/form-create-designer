@@ -7,11 +7,9 @@
             </div>
         </template>
         <template v-else>
-            <div class="_fc-signature-btn" @click="open">
-                <i class="fc-icon icon-edit2"></i> {{ formCreateInject.t('signaturePadTip') || '点击添加手写签名' }}
-            </div>
+            <div class="_fc-signature-btn" @click="open"><i class="fc-icon icon-edit2"></i> {{ tipText }}</div>
         </template>
-        <el-dialog class="_fc-signature-dialog" :title="formCreateInject.t('signaturePadTitle') || '请在虚线框内书写'"
+        <el-dialog class="_fc-signature-dialog" :title="padTitleText"
                    v-model="visible"
                    destroy-on-close
                    :close-on-click-modal="false"
@@ -47,8 +45,18 @@ export default defineComponent({
         modelValue: String,
         penColor: String,
         disabled: Boolean,
+        tip: String,
+        padTitle: String,
         formCreateInject: Object,
         beforeRemove: Function,
+    },
+    computed: {
+        tipText() {
+            return this.tip || this.formCreateInject?.t('signaturePadTip') || '点击添加手写签名';
+        },
+        padTitleText() {
+            return this.padTitle || this.formCreateInject?.t('signaturePadTitle') || '请在虚线框内书写';
+        },
     },
     watch: {
         visible(val) {

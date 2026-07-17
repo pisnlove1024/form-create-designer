@@ -92,13 +92,7 @@
                             </template>
                         </el-main>
                         <el-main v-if="activeMenuTab === 'tree'">
-                            <el-tree
-                                ref="treeRef"
-                                :data="treeInfo"
-                                default-expand-all
-                                :expand-on-click-node="false"
-                                @currentChange="treeChange"
-                            >
+                            <StructTree ref="treeRef">
                                 <template #default="{ node, data }">
                                     <div class="_fc-tree-node" :class="{active: activeRule === data.rule}">
                                         <div class="_fc-tree-label">
@@ -133,7 +127,7 @@
                                         </div>
                                     </div>
                                 </template>
-                            </el-tree>
+                            </StructTree>
                         </el-main>
                     </el-container>
                 </el-aside>
@@ -221,6 +215,7 @@
                         <div class="_fc-m-drag" :class="device"
                              ref="dragCon"
                              :style="{'--fc-drag-empty': `'${t('designer.dragEmpty')}'`,'--fc-child-empty': `'${t('designer.childEmpty')}'`}">
+                            <slot name="header"></slot>
                             <div class="_fc-m-input" v-if="inputForm.state">
                                 <ViewForm :key="inputForm.key" :rule="inputForm.rule" :option="inputForm.option"
                                           :locale="locale?.name"
@@ -256,14 +251,7 @@
                                       :modelValue="form.value" @change="formOptChange"
                                       v-model:api="form.api"  @mounted="formMounted">
                                 <template #title="scope">
-                                    <template v-if="scope.rule.warning">
-                                        <Warning :tooltip="scope.rule.warning">
-                                            {{ scope.rule.title }}
-                                        </Warning>
-                                    </template>
-                                    <template v-else>
-                                        {{scope.rule.title}}
-                                    </template>
+                                    <FormLabel :rule="scope.rule"></FormLabel>
                                 </template>
                             </DragForm>
                         </el-main>
@@ -277,7 +265,7 @@
                                 <p class="_fc-r-title">{{ t('designer.type') }}</p>
                                 <TypeSelect :disabled="activePermission.switchType === false"></TypeSelect>
                                 <template
-                                    v-if="activePermission.name !== false && (activeRule && activeRule.name && config.showComponentName !== false)">
+                                    v-if="activePermission.name !== false && (activeRule && activeRule._menu.aide !== true && config.showComponentName !== false)">
                                     <p class="_fc-r-title">
                                         <Warning :tooltip="t('warning.name')">
                                             {{ t('designer.name') }}
@@ -285,6 +273,7 @@
                                     </p>
                                     <el-input size="small" class="_fc-r-name-input"
                                               v-model="activeRule.name"
+                                              @change="changeName"
                                               :readonly="getConfig('nameReadonly') !== false">
                                         <template #suffix>
                                             <i class="fc-icon icon-group" @click="copyName"></i>
@@ -331,14 +320,7 @@
                                               :modelValue="propsForm.value"
                                               @change="propChange" @removeField="propRemoveField">
                                         <template #title="scope">
-                                            <template v-if="scope.rule.warning">
-                                                <Warning :tooltip="scope.rule.warning">
-                                                    {{ scope.rule.title }}
-                                                </Warning>
-                                            </template>
-                                            <template v-else>
-                                                {{scope.rule.title}}
-                                            </template>
+                                            <FormLabel :rule="scope.rule"></FormLabel>
                                         </template>
                                     </DragForm>
                                     <el-divider v-if="customForm.isShow && customForm.propsShow">
@@ -479,16 +461,36 @@ import LanguageConfig from './language/LanguageConfig.vue';
 import FcAiPanel from './ai/AiPanel.vue';
 import JsonPreview from './JsonPreview.vue';
 import Warning from './Warning.vue';
+import FormLabel from './FormLabel.vue';
+import StructTree from './StructTree.vue';
 import ConfigItem from './style/ConfigItem.vue';
 
 hljs.registerLanguage('javascript', javascript);
 hljs.registerLanguage('xml', xml);
+
+function flatOptionValue(value, prefix, data) {
+    if (data == null || typeof data !== 'object' || Array.isArray(data)) {
+        if (prefix) {
+            value[prefix] = data;
+            value['formCreate' + upper(prefix)] = data;
+        }
+        return;
+    }
+    if (prefix) {
+        value['formCreate' + upper(prefix)] = data;
+    }
+    Object.keys(data).forEach(k => {
+        flatOptionValue(value, prefix ? `${prefix}>${k}` : k, data[k]);
+    });
+}
 
 export default defineComponent({
     name: 'FcDesignerMobile',
     components: {
         ConfigItem,
         Warning,
+        StructTree,
+        FormLabel,
         JsonPreview,
         LanguageConfig,
         FcAiPanel,
@@ -572,7 +574,18 @@ export default defineComponent({
         }
         const t = (...args) => _t(...args);
 
+        const analysisMenuProps = (props, ...args) => {
+            if (Array.isArray(props)) {
+                return deepCopy(props);
+            } else if (typeof props === 'function') {
+                return props(...args);
+            } else {
+                return [];
+            }
+        };
+
         const tidyRuleConfig = (orgRule, configRule, ...args) => {
+            const org = analysisMenuProps(orgRule, ...args);
             if (configRule) {
                 if (is.Function(configRule)) {
                     return configRule(...args);
@@ -580,14 +593,14 @@ export default defineComponent({
                 if (configRule.rule) {
                     let rule = configRule.rule(...args);
                     if (configRule.prepend) {
-                        rule = [...rule, ...orgRule(...args)];
+                        rule = [...rule, ...org];
                     } else if (configRule.append) {
-                        rule = [...orgRule(...args), ...rule];
+                        rule = [...org, ...rule];
                     }
                     return rule;
                 }
             }
-            return orgRule(...args);
+            return org;
         }
 
         const defaultMenus = ref(deepCopy(menus));
@@ -833,6 +846,18 @@ export default defineComponent({
             return Array.isArray(menu.value) ? menu.value : defaultMenus.value;
         });
 
+        const initMenuDefaultCollapse = () => {
+            const collapseMenu = configRef.value?.collapseMenu || [];
+            if (Array.isArray(collapseMenu)) {
+                menuList.value.forEach(item => {
+                    if (!item) return;
+                    if (item.hidden === undefined && collapseMenu.indexOf(item.name) > -1) {
+                        item.hidden = true;
+                    }
+                });
+            }
+        };
+
         const methods = {
             setDevice(device) {
                 data.device = device;
@@ -985,6 +1010,11 @@ export default defineComponent({
             updateName() {
                 data.activeRule.name = 'ref_' + uniqueId();
             },
+            changeName() {
+                if (!data.activeRule.name) {
+                    methods.updateName();
+                }
+            },
             makeDrag(group, tag, children, on, slot) {
                 return {
                     type: 'DragBox',
@@ -1077,7 +1107,7 @@ export default defineComponent({
             },
             getOption() {
                 const options = deepCopy(data.formOptions);
-                ['onReset', 'onSubmit', 'beforeSubmit', 'onCreated', 'onMounted', 'onReload', 'onChange', 'beforeFetch'].forEach(key => {
+                ['onReset', 'onSubmit', 'beforeSubmit', 'onCreated', 'onMounted', 'onBeforeUnmount', 'onReload', 'onChange', 'beforeFetch'].forEach(key => {
                     delete options[key];
                 });
                 Object.keys(options._event || {}).forEach(k => {
@@ -1111,6 +1141,11 @@ export default defineComponent({
                     })
                 }
                 Object.keys(options).forEach(k => {
+                    Object.keys(options[k]).forEach(key => {
+                        if (isNull(options[k][key]) || (typeof options[k][key] === 'object' && !Object.keys(options[k][key]).length)) {
+                            delete options[k][key];
+                        }
+                    });
                     if (is.Object(options[k]) && !Object.keys(options[k]).length) {
                         delete options[k];
                     }
@@ -1185,6 +1220,7 @@ export default defineComponent({
                     onSubmit: options.onSubmit || '',
                     onCreated: options.onCreated || '',
                     onMounted: options.onMounted || '',
+                    onBeforeUnmount: options.onBeforeUnmount || '',
                     beforeSubmit: options.beforeSubmit || '',
                     onReload: options.onReload || '',
                     onChange: options.onChange || '',
@@ -1249,10 +1285,8 @@ export default defineComponent({
                     const item = data.formOptions[key];
                     value['>' + key] = item;
                     value['formCreate' + upper(key)] = item;
-                    if (typeof item === 'object') {
-                        Object.keys(item).forEach(k => {
-                            value[key + '>' + k] = item[k];
-                        })
+                    if (item != null && typeof item === 'object' && !Array.isArray(item)) {
+                        flatOptionValue(value, key, item);
                     }
                 });
                 data.form.value = value;
@@ -1658,6 +1692,9 @@ export default defineComponent({
                 } else if (Array.isArray(appendConfigData)) {
                     appendConfigData.forEach(v => {
                         formData[v] = undefined;
+                        propFieldDeepFn(v, ({ source, field }) => {
+                            formData[v] = source[field];
+                        });
                     });
                 }
                 Object.keys(rule).forEach(k => {
@@ -1691,11 +1728,11 @@ export default defineComponent({
 
                 if (data.baseForm.isShow) {
                     data.baseForm.value = {
+                        ...formData,
                         field: rule.field,
                         title: rule.title || '',
                         info: rule.info,
                         _control: rule._control,
-                        ...formData
                     };
                     data.validateForm.value = {
                         validate: rule.validate ? [...rule.validate] : [],
@@ -1733,6 +1770,22 @@ export default defineComponent({
                     errorMessage(data.t('struct.only', {label: t('com.' + menu.name + '.name') || menu.label}));
                 }
                 return flag;
+            },
+            mergeRule(rule, update) {
+                Object.keys(update).forEach(k => {
+                    if (k === 'required') {
+                        rule.$required = !!update.required;
+                    } else if (k === 'disabled') {
+                        if (!rule.props) {
+                            rule.props = {};
+                        }
+                        rule.props.disabled = !!update.disabled;
+                    } else if (k === 'props') {
+                        rule.props = {...(rule.props || {}), ...deepCopy(update[k])};
+                    } else {
+                        rule[k] = deepCopy(update[k]);
+                    }
+                });
             },
             dragMenu({menu, children, index, slot}) {
                 if (data.inputForm.state) {
@@ -1842,6 +1895,18 @@ export default defineComponent({
                 if (!methods.checkAllowDrag(menu, toMenu)) {
                     return false;
                 }
+
+                let parentRule = toRule;
+
+                while (parentRule) {
+                    parentRule = parentRule?.__fc__?.parent?.rule;
+                    if (parentRule && parentRule._menu) {
+                        if (!methods.checkAllowDrag(menu, parentRule._menu)) {
+                            return false;
+                        }
+                    }
+                }
+
                 if (toRule.children && toMenu.maxChildren && toMenu.maxChildren <= toRule.children[0]?.children?.length) {
                     return false;
                 }
@@ -2251,9 +2316,6 @@ export default defineComponent({
                 methods.addOperationRecord();
                 methods.updateTree();
             },
-            treeChange(data) {
-                methods.triggerActive(data.rule);
-            },
             getFormDescription() {
                 return getFormRuleDescription(methods.getDescription());
             },
@@ -2452,6 +2514,7 @@ export default defineComponent({
         }
         data.dragForm.rule = methods.makeDragRule(methods.makeChildren(data.children));
         methods.setOption({});
+        initMenuDefaultCollapse();
         if (!menu.value) {
             methods.addComponent(ruleList);
         } else {

@@ -1,6 +1,6 @@
 <template>
     <el-col :span="24">
-        <div class="_fc-table" :class="{'is-mini': mini}">
+        <div class="_fc-table" :class="{ 'is-mini': mini, 'is-table-form': formStyle }">
             <table border="1" cellspacing="0" cellpadding="0" :style="tableColor">
                 <template v-for="(_,pid) in rule.row" :key="pid">
                     <tr>
@@ -29,6 +29,7 @@ export default {
     name: 'FcTable',
     props: {
         mini: Boolean,
+        formStyle: Boolean,
         label: String,
         width: [Number, String],
         border: {
@@ -220,5 +221,32 @@ export default {
 ._fc-table.is-mini .el-form-item {
     padding: 0;
     margin: 0;
+}
+
+._fc-table.is-table-form .el-form-item {
+    margin-bottom: 1px;
+}
+
+._fc-table.is-table-form .el-form-item.is-error {
+    margin-bottom: 22px;
+}
+
+._fc-table.is-table-form .el-form-item__label,
+._fc-table.is-table-form .van-field__label {
+    display: none !important;
+}
+
+._fc-table.is-table-form .el-form-item__content {
+    display: flex;
+    margin-left: 0 !important;
+    width: 100% !important;
+}
+
+._fc-table.is-table-form .el-input-number,
+._fc-table.is-table-form .el-select,
+._fc-table.is-table-form .el-slider,
+._fc-table.is-table-form .el-cascader,
+._fc-table.is-table-form .el-date-editor {
+    width: 100%;
 }
 </style>

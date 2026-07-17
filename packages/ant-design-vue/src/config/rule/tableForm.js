@@ -1,5 +1,5 @@
 import unique from '@form-create/utils/lib/unique';
-import {localeProps} from '../../utils';
+import {getInjectArg, localeProps} from '../../utils';
 
 const label = '表格表单';
 const name = 'tableForm';
@@ -26,11 +26,12 @@ export default {
                     label: column.label,
                     align: column.align,
                     required: column.required || false,
+                    hidden: column.hidden || false,
                     width: column.style.width || '',
                     color: column.style.color || '',
                 },
-                children: column.rule || []
-            }
+                children: column.rule || [],
+            };
         });
         delete rule.props.columns;
     },
@@ -40,14 +41,15 @@ export default {
             return {
                 label: column.props.label,
                 required: column.props.required,
+                hidden: column.hidden,
                 align: column.props.align,
                 style: {
                     width: column.props.width,
                     color: column.props.color,
                 },
-                rule: column.children || []
+                rule: column.children || [],
             };
-        })
+        });
         rule.children = [];
     },
     rule({t}) {
@@ -57,14 +59,14 @@ export default {
             title: t('com.tableForm.name'),
             info: '',
             props: {},
-            children: []
+            children: [],
         };
     },
     props(_, {t}) {
         return localeProps(t, name + '.props', [
             {
                 type: 'switch',
-                field: 'disabled'
+                field: 'disabled',
             },
             {
                 type: 'switch',
@@ -78,19 +80,36 @@ export default {
             },
             {
                 type: 'switch',
+                field: 'showIndex',
+                value: true,
+            },
+            {
+                type: 'FnInput',
+                field: 'beforeRemove',
+                warning: t('com.tableForm.info'),
+                props: {
+                    body: true,
+                    button: true,
+                    fnx: true,
+                    args: [getInjectArg(t)],
+                    name: 'beforeRemove',
+                },
+            },
+            {
+                type: 'switch',
                 field: 'filterEmptyColumn',
                 value: true,
             },
             {
                 type: 'inputNumber',
                 field: 'min',
-                props: {min: 0}
+                props: {min: 0},
             },
             {
                 type: 'inputNumber',
                 field: 'max',
-                props: {min: 0}
+                props: {min: 0},
             },
         ]);
-    }
+    },
 };

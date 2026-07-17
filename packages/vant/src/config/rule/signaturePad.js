@@ -26,6 +26,14 @@ export default {
     props(_, {t}) {
         return localeProps(t, name + '.props', [
             {
+                type: 'input',
+                field: 'tip',
+            },
+            {
+                type: 'input',
+                field: 'padTitle',
+            },
+            {
                 type: 'ColorInput',
                 field: 'penColor',
             },

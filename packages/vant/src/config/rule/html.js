@@ -34,7 +34,6 @@ export default {
     },
     props(_, {t}) {
         return localeProps(t, name + '.props', [
-            ...makeTitleRule(t),
             {
                 type: 'HtmlEditor',
                 field: 'formCreateChild',

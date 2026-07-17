@@ -44,6 +44,23 @@ type extendRule = ((arg: { t: t }) => Rule[]) | {
     prepend?: boolean;
 };
 
+//field选择项
+type FieldItem = {
+    icon?: string;
+    field: string;
+    label: string;
+    disabled?: boolean;
+    //修改当前规则的必填,禁用和说明
+    update?: {
+        required?: Boolean;
+        disabled?: Boolean;
+        info?: string;
+        title?: string;
+        props?: Object;
+    };
+    children?: FieldItem[];
+};
+
 //可拖入的组件列表
 type AllowDrag = string[] | {
     //可拖入的菜单列表
@@ -226,6 +243,8 @@ export interface Config {
     fieldReadonly?: boolean;
     //配置name是否可以编辑
     nameReadonly?: boolean;
+    //field选择项,支持多级
+    fieldList?: FieldItem[];
     //隐藏拖拽操作按钮
     hiddenDragMenu?: boolean;
     //隐藏拖拽按钮
@@ -270,6 +289,8 @@ export interface Config {
     }[],
     //隐藏部分菜单
     hiddenMenu?: MenuName[]
+    //左侧菜单分组默认收起
+    collapseMenu?: MenuName[]
     //隐藏部分组件
     hiddenItem?: string[];
     //隐藏表单部分配置项
@@ -465,7 +486,7 @@ export type Handle = Array<{
     //按钮名称
     label: String;
     //回调函数
-    callback: Function;
+    handle: Function;
 }>
 
 //描述规则

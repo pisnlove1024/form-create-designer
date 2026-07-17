@@ -31,8 +31,10 @@
     height: 100%;
 }
 
-._fd-config-dialog .CodeMirror-scroll {
-    background-color: #FFFFFF;
+._fc-designer .CodeMirror-placeholder,
+._fd-struct-con .CodeMirror-placeholder,
+._fd-config-dialog .CodeMirror-placeholder {
+    color: #aaaaaa !important;
 }
 
 ._fc-designer {
@@ -357,6 +359,13 @@
 ._fc-tree-label {
     display: flex;
     align-items: center;
+    min-width: 0;
+}
+
+._fc-tree-label > span {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 ._fc-tree-label > i {
@@ -805,6 +814,10 @@
     z-index: 999999;
 }
 
+._fd-drag-item {
+    width: 100%;
+}
+
 ._fd-menu {
     display: flex;
     flex-direction: column;
@@ -831,4 +844,20 @@
 
 ._fd-menu-item.is-active > div > .fc-icon {
     color: #2E73FF;
+}
+
+._fd-form-item-wrap > .ant-form-item-row {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+}
+
+._fd-form-item-wrap > .ant-form-item-row > .ant-form-item-control {
+    width: 155px;
+    flex: none;
+}
+
+._fc-designer .CodeMirror-placeholder, ._fd-config-dialog .CodeMirror-placeholder, ._fd-struct-con .CodeMirror-placeholder {
+    color: #aaaaaa !important;
 }

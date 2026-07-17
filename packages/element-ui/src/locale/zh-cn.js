@@ -29,6 +29,7 @@ const ZhCn = {
         onReset: '表单重置后触发',
         onCreated: '表单组件初始化完毕后触发',
         onMounted: '表单组件渲染完毕后触发',
+        onBeforeUnmount: '表单组件卸载前触发',
         onReload: '表单渲染规则重载后触发',
         onChange: '表单组件的值发生变化时触发',
         beforeSubmit: '表单验证通过时触发',
@@ -225,6 +226,7 @@ const ZhCn = {
     },
     struct: {
         title: '编辑数据',
+        editText: '编辑文本',
         only: '【{label}】只允许添加一个',
         errorMsg: '输入的内容语法错误',
         configured: '已配置',
@@ -274,6 +276,7 @@ const ZhCn = {
         validateFail: '表单验证失败时触发',
         hook_load: '组件规则加载后触发',
         hook_mounted: '组件挂载后触发',
+        hook_beforeUnmount: '组件卸载前触发',
         hook_deleted: '组件规则被移除后触发',
         hook_watch: '组件规则发生变化后触发',
         hook_value: '组件的值发生变化后触发',
@@ -317,6 +320,8 @@ const ZhCn = {
             fetch: '远程数据',
             struct: '静态数据',
             global: '全局数据',
+            text: '文本录入',
+            json: 'JSON数据',
         },
         preview: '预览响应数据',
         test: '测试请求',
@@ -399,7 +404,29 @@ const ZhCn = {
             400: '常规体',
             500: '中黑体',
             700: '中粗体',
-        }
+        },
+        background: {
+            name: '背景',
+            image: '背景图',
+            placeholder: '输入图片地址',
+            select: '选择',
+            size: {
+                name: '尺寸',
+                cover: '覆盖',
+                contain: '包含',
+                auto: '自动',
+            },
+            position: '位置',
+            repeat: {
+                name: '重复',
+                'no-repeat': '不重复',
+                repeat: '重复',
+                'repeat-x': '横向重复',
+                'repeat-y': '纵向重复',
+                round: '圆角重复',
+                space: '间距重复',
+            },
+        },
     },
     designer: {
         component: '组件配置',
@@ -465,6 +492,7 @@ const ZhCn = {
         reset: '重置',
         copy: '复制',
         import: '导入',
+        export: '导出',
         delete: '删除',
         hide: '隐藏',
         show: '显示',
@@ -959,6 +987,8 @@ const ZhCn = {
             name: '表格布局',
             props: {
                 border: '是否显示边框',
+                mini: '紧凑模式',
+                formStyle: '表格表单样式',
                 borderColor: '边框颜色',
                 borderWidth: '边框宽度'
             }
@@ -970,6 +1000,8 @@ const ZhCn = {
             name: '手写签名',
             info: '删除签名前的回调函数，返回 false 可阻止删除操作',
             props: {
+                tip: '签名提示文字',
+                padTitle: '弹窗标题',
                 penColor: '线条的颜色',
                 disabled: '禁用',
                 beforeRemove: '删除前置回调',
@@ -1134,13 +1166,16 @@ const ZhCn = {
         },
         tableForm: {
             name: '表格表单',
+            info: '删除表格行前的回调函数，返回 false 可阻止删除操作',
             props: {
                 disabled: '是否禁用',
                 filterEmptyColumn: '是否过滤空行的数据',
                 max: '最多添加几行，为 0 则不限制',
                 min: '最少添加几行',
+                showIndex: '显示行号',
                 addable: '允许新增',
                 deletable: '允许删除',
+                beforeRemove: '删除前置回调',
             }
         },
         tableFormColumn: {

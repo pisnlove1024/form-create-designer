@@ -7,16 +7,14 @@
             </div>
         </template>
         <template v-else>
-            <div class="_fc-m-signature-btn" @click="open">
-                <i class="fc-icon icon-edit2"></i> {{ formCreateInject.t('signaturePadTip') || '点击添加手写签名' }}
-            </div>
+            <div class="_fc-m-signature-btn" @click="open"><i class="fc-icon icon-edit2"></i> {{ tipText }}</div>
         </template>
         <van-dialog v-model:show="visible" class="_fc-m-signature-dialog" :beforeClose="beforeClose"
                     @confirm="submit" @cancel="clear" show-cancel-button :confirm-button-text="formCreateInject.t('ok') || '确定'"
                     :cancel-button-text="formCreateInject.t('reset') || '重置'"
                     :confirm-button-disabled="isEmpty">
             <template #title>
-                {{ formCreateInject.t('signaturePadTitle') || '请在虚线框内书写' }}
+                {{ padTitleText }}
                 <i class="fc-icon icon-add2" @click="visible=false"></i>
             </template>
             <canvas class="_fc-m-signature-pad" ref="pad" width="320px" height="145px"></canvas>
@@ -42,8 +40,18 @@ export default defineComponent({
         modelValue: String,
         penColor: String,
         disabled: Boolean,
+        tip: String,
+        padTitle: String,
         formCreateInject: Object,
         beforeRemove: Function,
+    },
+    computed: {
+        tipText() {
+            return this.tip || this.formCreateInject?.t('signaturePadTip') || '点击添加手写签名';
+        },
+        padTitleText() {
+            return this.padTitle || this.formCreateInject?.t('signaturePadTitle') || '请在虚线框内书写';
+        },
     },
     watch: {
         visible(val) {

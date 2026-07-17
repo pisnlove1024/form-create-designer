@@ -21,6 +21,7 @@
 <p align="center">
   <a href="https://github.com/xaboy/form-create" target="_blank"><img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="TIM" /></a>
   <a href="https://github.com/xaboy/form-create" target="_blank"><img src="https://img.shields.io/npm/dt/@form-create/designer.svg" alt="dt" /></a>
+  <a href="https://github.com/xaboy/form-create" target="_blank"><img src="https://atomgit.com/xaboy/form-create-designer/star/badge.svg" alt="dt" /></a>
 </p>
 
 ## FormCreate 低代码表单设计器
@@ -33,7 +34,7 @@
 
 [![FcDesigner](https://static.form-create.com/file/img/banner-m2.jpg?20251027)](https://pro.form-create.com/view)
 
-**AI 表单助理已开源:[GitHub](https://github.com/xaboy/form-create-assistant) | [Gitee](https://gitee.com/xaboy/form-create-assistant)，用于根据自然语言描述自动生成和修改 FormCreate 表单规则**
+**AI 表单助理已开源:[GitHub](https://github.com/xaboy/form-create-assistant) | [Gitee](https://gitee.com/xaboy/form-create-assistant) | [AtomGit](https://atomgit.com/xaboy/form-create-assistant)，用于根据自然语言描述自动生成和修改 FormCreate 表单规则**
 
 ## 特点
 - 使用JSON数据生成表单

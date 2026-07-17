@@ -28,6 +28,8 @@ export default {
     props(_, {t}) {
         return localeProps(t, name + '.props', [
             {type: 'switch', field: 'border', value: true},
+            {type: 'switch', field: 'mini'},
+            {type: 'switch', field: 'formStyle'},
             {type: 'ColorInput', field: 'borderColor'},
             {type: 'input', field: 'borderWidth'},
         ]);

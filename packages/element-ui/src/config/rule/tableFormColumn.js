@@ -15,9 +15,9 @@ export default {
             type: name,
             props: {
                 label: t('com.tableFormColumn.label'),
-                width: 'auto'
+                width: 'auto',
             },
-            children: []
+            children: [],
         };
     },
     props(_, {t}) {
@@ -27,11 +27,16 @@ export default {
                 field: 'label',
             },
             {
-                type: 'select', field: 'align',
-                options: localeOptions(t, [{label: 'left', value: 'left'}, {label: 'center', value: 'center'}, {
-                    label: 'right',
-                    value: 'right'
-                }])
+                type: 'select',
+                field: 'align',
+                options: localeOptions(t, [
+                    {label: 'left', value: 'left'},
+                    {label: 'center', value: 'center'},
+                    {
+                        label: 'right',
+                        value: 'right',
+                    },
+                ]),
             },
             {
                 type: 'switch',
@@ -44,7 +49,7 @@ export default {
             {
                 type: 'ColorInput',
                 field: 'color',
-            }
+            },
         ]);
-    }
+    },
 };

@@ -59,6 +59,7 @@ export default defineConfig({
         },
         rollupOptions: {
             output: {
+                inlineDynamicImports: true,
                 exports: 'named',
                 globals: {
                     vue: 'Vue',

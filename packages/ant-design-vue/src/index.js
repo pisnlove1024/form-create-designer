@@ -1,6 +1,7 @@
 import FcDesigner from './components/FcDesigner.vue';
 import DragTool from './components/DragTool.vue';
 import Struct from './components/Struct.vue';
+import OptionTextInput from './components/OptionsTextInput.vue';
 import Row from './components/Row.vue';
 import HtmlEditor from './components/HtmlEditor.vue';
 import FnEditor from './components/FnEditor.vue';
@@ -59,6 +60,7 @@ designerForm.component('DragTool', DragTool);
 designerForm.component('DragBox', DragBox);
 designerForm.component('Validate', Validate);
 designerForm.component('Struct', Struct);
+designerForm.component('OptionTextInput', OptionTextInput);
 designerForm.component('HtmlEditor', HtmlEditor);
 designerForm.component('FetchConfig', FetchConfig);
 designerForm.component('FnEditor', FnEditor);
@@ -145,7 +147,7 @@ if (compareVersion(minVersion, formCreate.version) === 1) {
     console.warn('Please use FormCreate version ' + minVersion + ' or greater, see https://github.com/xaboy/form-create.');
 }
 
-FcDesigner.version = '3.4.0';
+FcDesigner.version = '3.5.0';
 
 if (typeof window !== 'undefined') {
     window.FcDesigner = FcDesigner;

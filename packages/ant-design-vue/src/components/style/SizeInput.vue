@@ -4,7 +4,7 @@
             <a-button :size="size" style="width: 150px;" @click="changeType()">{{ unit[idx] }}</a-button>
         </template>
         <template v-else>
-            <a-inputNumber :size="size" v-model:value="num" @change="submit"/>
+            <a-inputNumber :size="size" v-model:value="num" @change="submit" @keydown.enter="submit"/>
             <a-dropdown trigger="click" size="small">
                 <a-button :size="size">{{ unit[idx] }}</a-button>
                 <template #overlay>

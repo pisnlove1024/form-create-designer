@@ -1,40 +1,59 @@
 <template>
-    <div class="_fd-table-view" :class="{'is-mini': mini}">
+    <div class="_fd-table-view" :class="{ 'is-mini': mini, 'is-table-form': formStyle }">
         <table border="1" cellspacing="0" cellpadding="0" :style="tableColor" @mouseleave="mouseup" @mouseup="mouseup">
-            <template v-for="(_,pid) in rule.row" :key="pid">
+            <template v-for="(_, pid) in rule.row" :key="pid">
                 <tr>
                     <template v-for="(_, idx) in rule.col">
-                        <td v-if="lattice[pid][idx].show" :key="`${pid}${idx}`" :ref="`td_${pid}:${idx}`"
+                        <td
+                            v-if="lattice[pid][idx].show"
+                            :key="`${pid}${idx}`"
+                            :ref="`td_${pid}:${idx}`"
                             class="_fd-table-view-cell"
-                            v-bind="lattice[pid][idx] ? {colspan:lattice[pid][idx].colspan, rowspan:lattice[pid][idx].rowspan} : {}"
+                            v-bind="lattice[pid][idx] ? { colspan: lattice[pid][idx].colspan, rowspan: lattice[pid][idx].rowspan } : {}"
                             :style="[tableColor, (style && style[`${pid}:${idx}`]) || {}]"
-                            :class="[(rule.class && rule.class[`${pid}:${idx}`]) || '', {selected: selection.indexOf(`${pid}:${idx}`) > -1}]"
-                            @contextmenu="contextmenu($event, {pid, idx})"
-                            @mousedown="mousedown($event, {pid, idx})"
-                            @mousemove="mousemove($event, {pid, idx})"
-                            @dblclick="dblclick($event, {pid, idx})">
-                            <div class="_fd-table-row-handle" v-if="pid !== rule.row - 1"
-                                 @mousedown="rowResize($event, {pid, idx})"></div>
-                            <div class="_fd-table-col-handle" v-if="idx !== rule.col - 1"
-                                 @mousedown="colResize($event, {pid, idx})"></div>
-                            <DragTool :drag-btn="false" :handle-btn="true" @active="active({pid, idx})"
-                                      :unique="lattice[pid][idx].id">
-                                <DragBox v-bind="dragProp" @add="e=>dragAdd(e, {pid, idx})"
-                                         :ref="'drag' + pid + idx"
-                                         @end="e=>dragEnd(e, {pid, idx})" @start="e=>dragStart(e)"
-                                         @unchoose="e=>dragUnchoose(e)"
-                                         :list="getSlotChildren([`${pid}:${idx}`, ...lattice[pid][idx].slot])">
+                            :class="[
+                                (rule.class && rule.class[`${pid}:${idx}`]) || '',
+                                { selected: selection.indexOf(`${pid}:${idx}`) > -1 },
+                            ]"
+                            @contextmenu="contextmenu($event, { pid, idx })"
+                            @mousedown="mousedown($event, { pid, idx })"
+                            @mousemove="mousemove($event, { pid, idx })"
+                            @dblclick="dblclick($event, { pid, idx })"
+                        >
+                            <div
+                                class="_fd-table-row-handle"
+                                v-if="pid !== rule.row - 1"
+                                @mousedown="rowResize($event, { pid, idx })"
+                            ></div>
+                            <div
+                                class="_fd-table-col-handle"
+                                v-if="idx !== rule.col - 1"
+                                @mousedown="colResize($event, { pid, idx })"
+                            ></div>
+                            <DragTool :drag-btn="false" :handle-btn="true" @active="active({ pid, idx })" :unique="lattice[pid][idx].id">
+                                <DragBox
+                                    v-bind="dragProp"
+                                    @add="e => dragAdd(e, { pid, idx })"
+                                    :ref="'drag' + pid + idx"
+                                    @end="e => dragEnd(e, { pid, idx })"
+                                    @start="e => dragStart(e)"
+                                    @unchoose="e => dragUnchoose(e)"
+                                    :list="getSlotChildren([`${pid}:${idx}`, ...lattice[pid][idx].slot])"
+                                >
                                     <slot :name="`${pid}:${idx}`"></slot>
                                 </DragBox>
                                 <template #handle>
-                                    <div class="_fd-drag-btn _fd-table-view-btn"
-                                         @click.stop="addRow({pid,idx,data: lattice[pid][idx]}, 0)">
+                                    <div
+                                        class="_fd-drag-btn _fd-table-view-btn"
+                                        @click.stop="addRow({ pid, idx, data: lattice[pid][idx] }, 0)"
+                                    >
                                         <i class="fc-icon icon-add-col"></i>
                                     </div>
-                                    <div class="_fd-drag-btn _fd-table-view-btn"
-                                         @click.stop="addCol({pid,idx,data: lattice[pid][idx]}, 0)">
-                                        <i class="fc-icon icon-add-col"
-                                           style="transform: rotate(90deg);"></i>
+                                    <div
+                                        class="_fd-drag-btn _fd-table-view-btn"
+                                        @click.stop="addCol({ pid, idx, data: lattice[pid][idx] }, 0)"
+                                    >
+                                        <i class="fc-icon icon-add-col" style="transform: rotate(90deg)"></i>
                                     </div>
                                 </template>
                             </DragTool>
@@ -43,71 +62,54 @@
                 </tr>
             </template>
         </table>
-        <div class="_fd-table-context-menu" v-if="visible" :style="menuPos">
+        <div ref="contextMenu" class="_fd-table-context-menu" v-if="visible" :style="menuPos">
             <div class="_fd-table-context-menuitem" @click.stop="selectionStyle">{{ t('props.style') }}</div>
             <div class="_fd-table-context-menuitem" @click.stop="rmSelectionContent">{{ t('props.clear') }}</div>
             <div class="_fd-table-context-menu-separator"></div>
-            <div class="_fd-table-context-menuitem" @click.stop="mergeSelection(false)">{{
-                    t('tableOptions.batchMerge')
-                }}
-            </div>
-            <div class="_fd-table-context-menuitem" @click.stop="mergeSelection(true)">{{
-                    t('tableOptions.batchSplit')
-                }}
-            </div>
-            <div class="_fd-table-context-menuitem"
-                 @click.stop="addCol({pid: selectionPos.startRow, idx: selectionPos.startCol}, 1)">
+            <div class="_fd-table-context-menuitem" @click.stop="mergeSelection(false)">{{ t('tableOptions.batchMerge') }}</div>
+            <div class="_fd-table-context-menuitem" @click.stop="mergeSelection(true)">{{ t('tableOptions.batchSplit') }}</div>
+            <div class="_fd-table-context-menuitem" @click.stop="addCol({ pid: selectionPos.startRow, idx: selectionPos.startCol }, 1)">
                 {{ t('tableOptions.addLeft') }}
             </div>
-            <div class="_fd-table-context-menuitem"
-                 @click.stop="addCol({pid: selectionPos.startRow, idx: selectionPos.endCol}, 0)">
+            <div class="_fd-table-context-menuitem" @click.stop="addCol({ pid: selectionPos.startRow, idx: selectionPos.endCol }, 0)">
                 {{ t('tableOptions.addRight') }}
             </div>
-            <div class="_fd-table-context-menuitem"
-                 @click.stop="addRow({pid: selectionPos.startRow, idx: selectionPos.startCol}, 1)">
+            <div class="_fd-table-context-menuitem" @click.stop="addRow({ pid: selectionPos.startRow, idx: selectionPos.startCol }, 1)">
                 {{ t('tableOptions.addTop') }}
             </div>
-            <div class="_fd-table-context-menuitem"
-                 @click.stop="addRow({pid: selectionPos.startRow, idx: selectionPos.endCol}, 0)">
+            <div class="_fd-table-context-menuitem" @click.stop="addRow({ pid: selectionPos.startRow, idx: selectionPos.endCol }, 0)">
                 {{ t('tableOptions.addBottom') }}
             </div>
             <div class="_fd-table-context-menu-separator"></div>
-            <div class="_fd-table-context-menuitem" @click.stop="rmSelectionRow">{{
-                    t('tableOptions.batchRmRow')
-                }}
-            </div>
-            <div class="_fd-table-context-menuitem" @click.stop="rmSelectionCol">{{
-                    t('tableOptions.batchRmCol')
-                }}
-            </div>
+            <div class="_fd-table-context-menuitem" @click.stop="rmSelectionRow">{{ t('tableOptions.batchRmRow') }}</div>
+            <div class="_fd-table-context-menuitem" @click.stop="rmSelectionCol">{{ t('tableOptions.batchRmCol') }}</div>
         </div>
     </div>
 </template>
 
 <script>
-
 import DragTool from '../DragTool.vue';
 import DragBox from '../DragBox.vue';
-import {defineComponent} from 'vue';
+import {defineComponent, nextTick} from 'vue';
 import uniqueId from '@form-create/utils/lib/unique';
-
 
 export default defineComponent({
     name: 'FcTableView',
     props: {
         mini: Boolean,
+        formStyle: Boolean,
         label: String,
         width: [Number, String],
         formCreateInject: Object,
         border: {
             type: Boolean,
-            default: true
+            default: true,
         },
         borderWidth: String,
         borderColor: String,
         rule: {
             type: Object,
-            default: () => ({row: 1, col: 1})
+            default: () => ({row: 1, col: 1}),
         },
     },
     inject: ['designer'],
@@ -122,7 +124,7 @@ export default defineComponent({
                 this.style = this.rule.style;
             },
             immediate: true,
-        }
+        },
     },
     data() {
         return {
@@ -153,7 +155,7 @@ export default defineComponent({
                             put: (to, ...args) => {
                                 to.el.__rule__ = this.formCreateInject.rule;
                                 return this.designer.setupState.dragPut(to, ...args);
-                            }
+                            },
                         },
                         ghostClass: 'ghost',
                         animation: 150,
@@ -161,13 +163,12 @@ export default defineComponent({
                         emptyInsertThreshold: 0,
                         direction: 'vertical',
                         itemKey: 'type',
-                    }
+                    },
                 },
                 tag: 'tableCell',
             },
             lattice: {},
             uni: {},
-
         };
     },
     computed: {
@@ -190,16 +191,46 @@ export default defineComponent({
         },
     },
     methods: {
-        contextmenu(e) {
+        async contextmenu(e) {
             e.preventDefault();
             e.stopPropagation();
             if (this.selectionPos) {
-                this.menuPos = {
-                    left: `${e.clientX}px`,
-                    top: `${e.clientY}px`,
-                };
                 this.visible = true;
+                await nextTick();
+                this.updateMenuPos(e.clientX, e.clientY);
             }
+        },
+        updateMenuPos(x, y) {
+            const menu = this.$refs.contextMenu;
+            const menuWidth = menu?.offsetWidth || 0;
+            const menuHeight = menu?.offsetHeight || 0;
+            const edge = 8;
+            const viewportWidth = window.innerWidth;
+            const viewportHeight = window.innerHeight;
+
+            let left = x;
+            let top = y;
+
+            if (left + menuWidth + edge > viewportWidth) {
+                left = viewportWidth - menuWidth - edge;
+            }
+            if (left < edge) {
+                left = edge;
+            }
+            if (top + menuHeight + edge > viewportHeight) {
+                top = y - menuHeight;
+            }
+            if (top + menuHeight + edge > viewportHeight) {
+                top = viewportHeight - menuHeight - edge;
+            }
+            if (top < edge) {
+                top = edge;
+            }
+
+            this.menuPos = {
+                left: `${left}px`,
+                top: `${top}px`,
+            };
         },
         rowResize(e, {pid, idx}) {
             e.preventDefault();
@@ -212,16 +243,16 @@ export default defineComponent({
             const currentResizeElement = this.$refs[`td_${key}`][0].parentElement;
             const style = this.rule.style[key] || {};
 
-            const doRowResize = (e) => {
+            const doRowResize = e => {
                 if (!this.resize.isResizing) return;
 
                 const dy = e.clientY - this.resize.startY;
                 const newHeight = this.resize.startHeight + dy;
                 if (newHeight > 20) {
                     currentResizeElement.style.height = `${newHeight}px`;
-                    height = newHeight
+                    height = newHeight;
                 }
-            }
+            };
 
             const stopResize = () => {
                 if (!this.resize.isResizing) return;
@@ -234,7 +265,7 @@ export default defineComponent({
 
                 document.removeEventListener('mousemove', doRowResize);
                 document.removeEventListener('mouseup', stopResize);
-            }
+            };
             this.resize.isResizing = true;
             this.resize.startY = e.clientY;
             this.resize.startHeight = currentResizeElement.offsetHeight;
@@ -257,16 +288,16 @@ export default defineComponent({
             const currentResizeElement = this.$refs[`td_${key}`][0];
             const style = this.rule.style[key] || {};
 
-            const doRowResize = (e) => {
+            const doRowResize = e => {
                 if (!this.resize.isResizing) return;
 
                 const dy = e.clientX - this.resize.startX;
                 const newWidth = this.resize.startWidth + dy;
                 if (newWidth > 20) {
                     currentResizeElement.style.width = `${newWidth}px`;
-                    width = newWidth
+                    width = newWidth;
                 }
-            }
+            };
 
             const stopResize = () => {
                 if (!this.resize.isResizing) return;
@@ -279,7 +310,7 @@ export default defineComponent({
 
                 document.removeEventListener('mousemove', doRowResize);
                 document.removeEventListener('mouseup', stopResize);
-            }
+            };
             this.resize.isResizing = true;
             this.resize.startX = e.clientX;
             this.resize.startWidth = currentResizeElement.offsetWidth;
@@ -288,7 +319,12 @@ export default defineComponent({
             document.addEventListener('mouseup', stopResize);
         },
         mousedown(e, {pid, idx}) {
-            if (e.button === 0 && !e.target.classList.contains('icon-move') && !e.target.classList.contains('_fd-table-row-handle') && !e.target.classList.contains('_fd-table-col-handle')) {
+            if (
+                e.button === 0 &&
+                !e.target.classList.contains('icon-move') &&
+                !e.target.classList.contains('_fd-table-row-handle') &&
+                !e.target.classList.contains('_fd-table-col-handle')
+            ) {
                 e.stopPropagation();
                 e.preventDefault();
                 if (this.visible) {
@@ -323,7 +359,7 @@ export default defineComponent({
                     children: this.formCreateInject.children,
                     index: this.formCreateInject.children.length,
                     slot: `${pid}:${idx}`,
-                })
+                });
             }
         },
         updateSelection({pid, idx}) {
@@ -333,20 +369,29 @@ export default defineComponent({
                 startCol: selection[0].idx,
                 endRow: selection[selection.length - 1].pid,
                 endCol: selection[selection.length - 1].idx,
-                selection
-            })
+                selection,
+            });
             this.selectionPos = {startRow, startCol, endRow, endCol};
-            this.selection = this.selectionRect({pid: startRow, idx: startCol}, {
-                pid: endRow,
-                idx: endCol
-            }, true);
+            this.selection = this.selectionRect(
+                {pid: startRow, idx: startCol},
+                {
+                    pid: endRow,
+                    idx: endCol,
+                },
+                true
+            );
         },
         getSelectionPos(data) {
             let {startRow, startCol, endRow, endCol} = data;
-            const selection = data.selection || this.selectionRect({pid: startRow, idx: startCol}, {
-                pid: endRow,
-                idx: endCol
-            });
+            const selection =
+                data.selection ||
+                this.selectionRect(
+                    {pid: startRow, idx: startCol},
+                    {
+                        pid: endRow,
+                        idx: endCol,
+                    }
+                );
             selection.forEach(item => {
                 const cell = this.lattice[item.pid][item.idx];
                 if (!cell.show) {
@@ -410,7 +455,6 @@ export default defineComponent({
             return children;
         },
         dragAdd(e, item) {
-            // console.log('dragAdd');
             const designer = this.designer.setupState;
             const children = this.formCreateInject.children;
             const slot = `${item.pid}:${item.idx}`;
@@ -448,7 +492,6 @@ export default defineComponent({
             }
         },
         dragEnd(e, item) {
-            // console.log('dragEnd');
             const designer = this.designer.setupState;
             const children = this.formCreateInject.children;
             const rule = e.item._underlying_vm_;
@@ -458,11 +501,9 @@ export default defineComponent({
             designer.dragEnd(this.formCreateInject.children, e, `${item.pid}:${item.idx}`);
         },
         dragStart() {
-            // console.log('dragStart');
             this.designer.setupState.dragStart(this.formCreateInject.children);
         },
         dragUnchoose(e) {
-            // console.log('dragUnchoose');
             this.designer.setupState.dragUnchoose(this.formCreateInject.children, e);
         },
         initRule() {
@@ -487,9 +528,18 @@ export default defineComponent({
             const key = `${item.pid}:${item.idx}`;
             this.designer.setupState.customActive({
                 name: 'fcTableGrid',
-                onPaste: (rule) => {
-                    rule.slot = key;
-                    this.formCreateInject.children.push(rule);
+                onPaste: rule => {
+                    let flag = false;
+                    this.formCreateInject.children.forEach(child => {
+                        if (child.slot === key) {
+                            flag = true;
+                            child.children.push(rule);
+                        }
+                    });
+                    if (!flag) {
+                        rule.slot = key;
+                        this.formCreateInject.children.push(rule);
+                    }
                 },
                 style: {
                     formData: {
@@ -503,7 +553,7 @@ export default defineComponent({
                             this.rule[field][key] = value;
                         }
                     },
-                }
+                },
             });
         },
         rmSlot(slot, rmSlot) {
@@ -518,7 +568,7 @@ export default defineComponent({
                 if (rmSlot.indexOf(child.slot) > -1) {
                     children.splice(index - del, 1);
                     del++;
-                } else if (((idx = slotKey.indexOf(child.slot)) > -1)) {
+                } else if ((idx = slotKey.indexOf(child.slot)) > -1) {
                     child.slot = slot[slotKey[idx]];
                 }
             });
@@ -540,11 +590,11 @@ export default defineComponent({
             this.rmSlot({}, this.selection);
         },
         selectionStyle() {
-            const oldStyle = {...this.rule.style[this.selection[0]] || {}};
+            const oldStyle = {...(this.rule.style[this.selection[0]] || {})};
             const tempStyle = this.selection.reduce((acc, cur) => {
-                acc[cur] = {...this.rule.style[cur] || {}};
+                acc[cur] = {...(this.rule.style[cur] || {})};
                 return acc;
-            }, {})
+            }, {});
             this.designer.setupState.customActive({
                 name: 'fcTableGrid',
                 style: {
@@ -567,9 +617,9 @@ export default defineComponent({
                             } else {
                                 this.rule[field][key] = value;
                             }
-                        })
+                        });
                     },
-                }
+                },
             });
         },
         rmSelectionCol() {
@@ -590,10 +640,17 @@ export default defineComponent({
             if (this.rule.col - len <= 0) {
                 this.formCreateInject.children.splice(0, this.formCreateInject.children.length);
             } else {
-                this.rmSlot(slot, this.selectionRect({pid: 0, idx: this.selectionPos.startCol}, {
-                    pid: this.rule.row,
-                    idx: this.selectionPos.endCol
-                }, true));
+                this.rmSlot(
+                    slot,
+                    this.selectionRect(
+                        {pid: 0, idx: this.selectionPos.startCol},
+                        {
+                            pid: this.rule.row,
+                            idx: this.selectionPos.endCol,
+                        },
+                        true
+                    )
+                );
             }
             this.rule.col = Math.max(1, this.rule.col - len);
             this.clearSelection();
@@ -616,18 +673,29 @@ export default defineComponent({
             if (this.rule.row - len <= 0) {
                 this.formCreateInject.children.splice(0, this.formCreateInject.children.length);
             } else {
-                this.rmSlot(slot, this.selectionRect({
-                    pid: this.selectionPos.startRow,
-                    idx: 0
-                }, {pid: this.selectionPos.endRow, idx: this.rule.col}, true));
+                this.rmSlot(
+                    slot,
+                    this.selectionRect(
+                        {
+                            pid: this.selectionPos.startRow,
+                            idx: 0,
+                        },
+                        {pid: this.selectionPos.endRow, idx: this.rule.col},
+                        true
+                    )
+                );
             }
             this.rule.row = Math.max(1, this.rule.row - len);
             this.clearSelection();
         },
         filterSelectionLayout() {
             return (this.rule.layout || []).filter(item => {
-                return (item.top < this.selectionPos.startRow || item.top > this.selectionPos.endRow)
-                    || (item.left < this.selectionPos.startCol || item.left > this.selectionPos.endCol);
+                return (
+                    item.top < this.selectionPos.startRow ||
+                    item.top > this.selectionPos.endRow ||
+                    item.left < this.selectionPos.startCol ||
+                    item.left > this.selectionPos.endCol
+                );
             });
         },
         mergeSelection(split) {
@@ -638,7 +706,7 @@ export default defineComponent({
                     left: this.selectionPos.startCol,
                     row: this.selectionPos.endRow - this.selectionPos.startRow + 1,
                     col: this.selectionPos.endCol - this.selectionPos.startCol + 1,
-                })
+                });
                 const slot = {};
                 for (let index = this.selectionPos.startRow; index <= this.selectionPos.endRow; index++) {
                     for (let idx = this.selectionPos.startCol; idx <= this.selectionPos.endCol; idx++) {
@@ -668,7 +736,7 @@ export default defineComponent({
                 const slotKey = Object.keys(slot);
                 this.formCreateInject.children.forEach(child => {
                     let idx;
-                    if (child.slot && ((idx = slotKey.indexOf(child.slot)) > -1)) {
+                    if (child.slot && (idx = slotKey.indexOf(child.slot)) > -1) {
                         child.slot = slot[slotKey[idx]];
                     }
                 });
@@ -699,7 +767,7 @@ export default defineComponent({
                 const slotKey = Object.keys(slot);
                 this.formCreateInject.children.forEach(child => {
                     let idx;
-                    if (child.slot && ((idx = slotKey.indexOf(child.slot)) > -1)) {
+                    if (child.slot && (idx = slotKey.indexOf(child.slot)) > -1) {
                         child.slot = slot[slotKey[idx]];
                     }
                 });
@@ -723,7 +791,12 @@ export default defineComponent({
                 }
             }
             [...(rule.layout || [])].forEach((v, i) => {
-                if (((!v.row || v.row <= 0) && (!v.col || v.col <= 0)) || !lattice[v.top] || !lattice[v.top][v.left] || !lattice[v.top][v.left].show) {
+                if (
+                    ((!v.row || v.row <= 0) && (!v.col || v.col <= 0)) ||
+                    !lattice[v.top] ||
+                    !lattice[v.top][v.left] ||
+                    !lattice[v.top][v.left].show
+                ) {
                     rule.layout.splice(i, 1);
                     return;
                 }
@@ -732,11 +805,11 @@ export default defineComponent({
                 let col = 1;
                 let row = 1;
                 if (v.col) {
-                    col = (v.col + v.left) > rule.col ? rule.col - v.left : v.col;
+                    col = v.col + v.left > rule.col ? rule.col - v.left : v.col;
                     data.colspan = col;
                 }
                 if (v.row) {
-                    row = (v.row + v.top) > rule.row ? rule.row - v.top : v.row;
+                    row = v.row + v.top > rule.row ? rule.row - v.top : v.row;
                     data.rowspan = row;
                 }
                 if (row && col) {
@@ -744,8 +817,7 @@ export default defineComponent({
                         const row = lattice[v.top + index];
                         if (row) {
                             for (let idx = 0; idx < col; idx++) {
-                                if (!idx && !index)
-                                    continue;
+                                if (!idx && !index) continue;
 
                                 if (row[v.left + idx]) {
                                     row[v.left + idx].show = false;
@@ -759,7 +831,7 @@ export default defineComponent({
                 }
             });
 
-            const checkCol = (col) => {
+            const checkCol = col => {
                 return !!(!col || col.layout || !col.show);
             };
 
@@ -804,13 +876,12 @@ export default defineComponent({
         document.addEventListener('click', this.hideMenu, true);
     },
     beforeUnmount() {
-        document.removeEventListener('click', this.hideMenu, true)
-    }
+        document.removeEventListener('click', this.hideMenu, true);
+    },
 });
 </script>
 
 <style>
-
 ._fd-table-view {
     overflow: auto;
 }
@@ -926,6 +997,32 @@ export default defineComponent({
 ._fd-table-view.is-mini .ant-form-item {
     padding: 0;
     margin: 0;
+}
+
+._fd-table-view.is-table-form .ant-form-item {
+    margin-bottom: 1px !important;
+}
+
+._fd-table-view.is-table-form .ant-form-item-has-error {
+    margin-bottom: 22px !important;
+}
+
+._fd-table-view.is-table-form .ant-form-item-label,
+._fd-table-view.is-table-form .van-field__label {
+    display: none !important;
+}
+
+._fd-table-view.is-table-form .ant-form-item-control {
+    margin-left: 0 !important;
+    width: 100% !important;
+}
+
+._fd-table-view.is-table-form .ant-input-number,
+._fd-table-view.is-table-form .ant-select,
+._fd-table-view.is-table-form .ant-slider,
+._fd-table-view.is-table-form .ant-cascader,
+._fd-table-view.is-table-form .ant-picker {
+    width: 100%;
 }
 
 ._fd-table-context-menu {

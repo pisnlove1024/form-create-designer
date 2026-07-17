@@ -65,6 +65,7 @@ export default defineConfig((env) => {
         },
         rollupOptions: {
             output: {
+                inlineDynamicImports: true,
                 exports: 'named',
             }
         },

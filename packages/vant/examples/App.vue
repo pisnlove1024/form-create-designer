@@ -17,7 +17,10 @@
                     <a href="https://form-create.com/v3/designer" class="item">PC端设计器</a>
                     <a href="https://pro.form-create.com/mobile" class="item pro-version">高级版🔥</a>
                     <a href="https://view.form-create.com/" target="_blank" class="item">文档</a>
+                    <a href="https://view.form-create.com/skills" target="_blank" class="item">Agent Skills</a>
+                    <a href="https://www.form-create.com/service/example" target="_blank" class="item">更多示例</a>
                     <a href="https://github.com/xaboy/form-create-designer" target="_blank" class="item">查看源码</a>
+                    <ApiKeyInput @save="onApiKeySave" />
                 </div>
             </div>
         </div>
@@ -116,6 +119,7 @@ import En from "../src/locale/en";
 import arrowDown from "@element-plus/icons-vue/dist/es/arrow-down.mjs";
 import {copyTextToClipboard} from "../src/utils";
 import ConfigPanel from "./components/ConfigPanel.vue";
+import ApiKeyInput from './components/ApiKeyInput.vue';
 
 const CACHE_KEY = 'fcm-config-$101';
 const TITLE = ['生成规则', '表单规则', '生成组件', '设置生成规则', '设置表单规则'];
@@ -125,6 +129,7 @@ export default {
     components: {
         ConfigPanel,
         arrowDown,
+        ApiKeyInput,
     },
     data() {
         let data = window.location.hash.substring(1);
@@ -150,8 +155,86 @@ export default {
             topImg: true,
             config: {
                 autoActive: true,
+                ai: {
+                    api: 'https://api.form-create.com/ai/v2/demo/chat',
+                },
                 fieldReadonly: false,
                 showSaveBtn: true,
+                fieldList: [
+                    {
+                        value: 'goods',
+                        label: '商品表',
+                        selectable: false,
+                        children: [
+                            {
+                                value: 'goods_id',
+                                label: '商品ID',
+                            },
+                            {
+                                value: 'goods_name',
+                                label: '商品名称',
+                            },
+                            {
+                                value: 'goods_info',
+                                label: '商品简介',
+                            },
+                            {
+                                value: 'goods_cate',
+                                label: '商品分类',
+                            },
+                            {
+                                value: 'goods_update_time',
+                                label: '商品上架时间',
+                            },
+                        ],
+                    },
+                    {
+                        value: 'user',
+                        label: '用户表',
+                        selectable: false,
+                        children: [
+                            {
+                                value: 'user_id',
+                                label: '用户ID',
+                            },
+                            {
+                                value: 'phone',
+                                label: '手机号',
+                            },
+                            {
+                                value: 'username',
+                                label: '用户名称',
+                            },
+                            {
+                                value: 'user_mark',
+                                label: '用户备注',
+                            },
+                            {
+                                value: 'avatar',
+                                label: '用户头像',
+                            },
+                        ],
+                    },
+                    {
+                        value: 'order',
+                        label: '订单表',
+                        selectable: false,
+                        children: [
+                            {
+                                value: 'order_id',
+                                label: '订单ID',
+                            },
+                            {
+                                value: 'order_sn',
+                                label: '订单号',
+                            },
+                            {
+                                value: 'order_time',
+                                label: '订单时间',
+                            },
+                        ],
+                    },
+                ],
             },
             handle: [
                 {
@@ -177,6 +260,17 @@ export default {
     methods: {
         goPro() {
             location.href = 'https://pro.form-create.com/view';
+        },
+        onApiKeySave(apiKey) {
+            if (apiKey) {
+                this.config.ai = {
+                    token: `Bearer ${apiKey}`,
+                };
+            } else {
+                this.config.ai = {
+                    api: 'https://api.form-create.com/ai/v2/demo/chat',
+                };
+            }
         },
         panelChange(config) {
             if (config.locale === 'en') {
@@ -289,7 +383,7 @@ export default {
             const rule = this.$refs.designer.getJson();
             const options = this.$refs.designer.getOptionsJson();
             const str = btoa(unescape(encodeURIComponent(JSON.stringify({rule, options}))));
-            copyTextToClipboard('https://form-create.com/v3/mobile#' + str);
+            copyTextToClipboard(location.origin + location.pathname + '#' + str);
         },
         onOk() {
             if (this.err) return;
@@ -364,66 +458,6 @@ export default {
             //     this.$refs.designer.setOption(cache.opt);
             // }
             this.$refs.designer.setRule("[{\"type\":\"html\",\"native\":true,\"attrs\":{\"innerHTML\":\"\"},\"style\":{\"display\":\"block\",\"width\":\"100%\"},\"children\":[\"<div class=\\\"_fd-view-box\\\">\\n  <div class=\\\"title\\\">FormCreate 设计器开源版演示站</div>\\n  <div class=\\\"desc\\\">开源免费可商用的可视化表单设计器</div>\\n<div class=\\\"_fd-view-products\\\">\\n        <a class=\\\"_fd-view-product\\\" href=\\\"https://form-create.com/v3/designer\\\" target=\\\"_blank\\\">\\n            <div><div>ElementPlus版PC端设计器👨🏻‍💻(Vue3)</div><span>立即体验</span></div> <span>采用 Vue3.0 和 ElementPlus 进行页面构建</span>\\n        </a>\\n        <a class=\\\"_fd-view-product vue2\\\" href=\\\"https://form-create.com/designer\\\" target=\\\"_blank\\\">\\n            <div><div>ElementUI版PC端设计器👨🏻‍💻(Vue2)</div><span>立即体验</span></div> <span>采用 Vue2.7 和 ElementUI 进行页面构建</span>\\n        </a>\\n        <a class=\\\"_fd-view-product\\\" href=\\\"https://form-create.com/v3/mobile\\\" target=\\\"_blank\\\">\\n            <div><div>ElementPlus版移动端设计器📱(Vue3)</div><span>立即体验</span></div> <span>采用 Vue3.0 和 ElementPlus 进行页面构建，移动端采用Vant4.0</span>\\n        </a>\\n        <a class=\\\"_fd-view-product\\\" href=\\\"https://form-create.com/v3/antd/designer\\\" target=\\\"_blank\\\">\\n            <div><div>Ant Design Vue版PC端设计器👨🏻‍💻(Vue3)</div><span>立即体验</span></div> <span>采用 Vue3.0 和 Ant Design Vue 进行页面构建</span>\\n        </a>\\n    </div>\\n</div>\"],\"_fc_id\":\"id_Fr6ym35jirw4acc\",\"name\":\"ref_Fcfnm35jirw4adc\",\"_fc_drag_tag\":\"html\",\"display\":true,\"hidden\":false},{\"type\":\"html\",\"native\":true,\"attrs\":{\"innerHTML\":\"\"},\"style\":{\"display\":\"block\",\"width\":\"100%\"},\"children\":[\"<div class=\\\"_fd-view-box\\\">\\n  <div class=\\\"title\\\">FormCreate 设计器<span style=\\\"color:#cd7f32;\\\">高级版</span>演示站</div>\\n  <div class=\\\"desc\\\">全面实现多端表单设计，为企业提供低代码表单解决方案</div>\\n<div class=\\\"_fd-view-products\\\">\\n        <a class=\\\"_fd-view-product\\\" href=\\\"https://pro.form-create.com/view\\\" target=\\\"_blank\\\">\\n            <div><div>ElementPlus版PC端设计器👨🏻‍💻(Vue3)</div><span>立即体验</span></div> <span>采用 Vue3.0 和 ElementPlus 进行页面构建</span>\\n        </a>\\n        <a class=\\\"_fd-view-product vue2\\\" href=\\\"https://pro.form-create.com/vue2/view\\\" target=\\\"_blank\\\">\\n            <div><div>ElementUI版PC端设计器👨🏻‍💻(Vue2)</div><span>立即体验</span></div> <span>采用 Vue2.7 和 ElementUI 进行页面构建</span>\\n        </a>\\n        <a class=\\\"_fd-view-product\\\" href=\\\"https://pro.form-create.com/mobile\\\" target=\\\"_blank\\\">\\n            <div><div>ElementPlus版移动端设计器📱(Vue3)</div><span>立即体验</span></div> <span>采用 Vue3.0 和 ElementPlus 进行页面构建，移动端采用Vant4.0</span>\\n        </a>\\n        <a class=\\\"_fd-view-product vue2\\\" href=\\\"https://pro.form-create.com/vue2/mobile\\\" target=\\\"_blank\\\">\\n            <div><div>ElementUI版移动端设计器📱(Vue2)</div><span>立即体验</span></div> <span>采用 Vue2.7 和 ElementUI 进行页面构建，移动端采用Vant2.0</span>\\n        </a>\\n        <a class=\\\"_fd-view-product\\\" href=\\\"https://pro.form-create.com/antd/view\\\" target=\\\"_blank\\\">\\n            <div><div>Ant Design Vue版PC端设计器👨🏻‍💻(Vue3)</div><span>立即体验</span></div> <span>采用 Vue3.0 和 Ant Design Vue 进行页面构建</span>\\n        </a>\\n        <a class=\\\"_fd-view-product vue2\\\" href=\\\"https://pro.form-create.com/vue2/antd/view\\\" target=\\\"_blank\\\">\\n            <div><div>Ant Design Vue版PC端设计器👨🏻‍💻(Vue2)</div><span>立即体验</span></div> <span>采用 Vue2.7 和 Ant Design Vue 进行页面构建</span>\\n        </a>\\n        <a class=\\\"_fd-view-product\\\" href=\\\"https://pro.form-create.com/antd/mobile\\\" target=\\\"_blank\\\">\\n            <div><div>Ant Design Vue版移动端设计器📱(Vue3)</div><span>立即体验</span></div> <span>采用 Vue3.0 和 Ant Design Vue 进行页面构建，移动端采用Vant4.0</span>\\n        </a>\\n        <a class=\\\"_fd-view-product vue2\\\" href=\\\"https://pro.form-create.com/vue2/antd/mobile\\\" target=\\\"_blank\\\">\\n            <div><div>Ant Design Vue版移动端设计器📱(Vue2)</div><span>立即体验</span></div> <span>采用 Vue2.7 和 Ant Design Vue 进行页面构建，移动端采用Vant2.0</span>\\n        </a>\\n    </div>\\n</div>\"],\"_fc_id\":\"id_Fv9um7t07ek9abc\",\"name\":\"ref_Fwthm7t07ek9acc\",\"_fc_drag_tag\":\"html\",\"display\":true,\"hidden\":false}]");
-            this.$refs.designer.setOption({
-                language: {
-                    "zh-cn": {
-                        "Az87OmQS": "商品名称",
-                        "BAVvUidu": "商品价格",
-                        "CkD1fG2H": "商品描述",
-                        "DgH2iJ3K": "库存数量",
-                        "EhI3jK4L": "发货方式",
-                        "FiJ4kL5M": "配送时间",
-                        "GjK5lM6N": "用户评价",
-                        "HkL6mN7O": "添加到购物车",
-                        "IkM7nO8P": "立即购买",
-                        "JlN8oP9Q": "优惠活动",
-                        "KmO9pQ0R": "搜索商品",
-                        "LnP0qR1S": "分类",
-                        "MoQ1rS2T": "品牌",
-                        "NpR2sT3U": "付款方式",
-                        "OqS3tU4V": "订单确认",
-                        "PrT4uV5W": "用户注册",
-                        "QsU5vW6X": "用户登录",
-                        "RtV6wX7Y": "联系客服",
-                        "SuW7xY8Z": "退出登录",
-                        "TvX8yZ9A": "个人信息",
-                        "UwY9zA0B": "购物车",
-                        "VxZ0aB1C": "结算",
-                        "WyA1bC2D": "运费",
-                        "XzB2cD3E": "订单状态",
-                        "YaC3dE4F": "支付成功",
-                        "ZbD4eF5G": "支付失败"
-                    },
-                    "en": {
-                        "Az87OmQS": "Goods name",
-                        "BAVvUidu": "Goods price",
-                        "CkD1fG2H": "Product description",
-                        "DgH2iJ3K": "Stock quantity",
-                        "EhI3jK4L": "Shipping method",
-                        "FiJ4kL5M": "Delivery time",
-                        "GjK5lM6N": "User reviews",
-                        "HkL6mN7O": "Add to cart",
-                        "IkM7nO8P": "Buy now",
-                        "JlN8oP9Q": "Promotions",
-                        "KmO9pQ0R": "Search products",
-                        "LnP0qR1S": "Category",
-                        "MoQ1rS2T": "Brand",
-                        "NpR2sT3U": "Payment method",
-                        "OqS3tU4V": "Order confirmation",
-                        "PrT4uV5W": "User registration",
-                        "QsU5vW6X": "User login",
-                        "RtV6wX7Y": "Contact customer service",
-                        "SuW7xY8Z": "Logout",
-                        "TvX8yZ9A": "Personal information",
-                        "UwY9zA0B": "Shopping cart",
-                        "VxZ0aB1C": "Checkout",
-                        "WyA1bC2D": "Shipping fee",
-                        "XzB2cD3E": "Order status",
-                        "YaC3dE4F": "Payment successful",
-                        "ZbD4eF5G": "Payment failed"
-                    }
-                }
-            });
         }
         this.$nextTick(() => {
             this.loadAutoSave();

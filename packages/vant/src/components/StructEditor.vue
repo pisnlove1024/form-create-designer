@@ -17,7 +17,7 @@ import beautify from 'js-beautify';
 export default defineComponent({
     name: 'StructEditor',
     props: {
-        modelValue: [Object, Array, Function],
+        modelValue: [Object, Array, Function, String],
         format: Boolean,
         defaultValue: {
             require: false

@@ -40,6 +40,7 @@ export default defineComponent({
 ._fd-warning-text {
     text-decoration: underline;
     text-decoration-style: dashed;
+    text-underline-offset: 3px;
     cursor: help;
 }
 </style>

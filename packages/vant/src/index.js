@@ -1,6 +1,7 @@
 import FcDesignerMobile from './components/FcDesigner.vue';
 import DragTool from './components/DragTool.vue';
 import Struct from './components/Struct.vue';
+import OptionTextInput from './components/OptionsTextInput.vue';
 import Row from './components/Row.vue';
 import HtmlEditor from './components/HtmlEditor.vue';
 import FnEditor from './components/FnEditor.vue';
@@ -61,6 +62,7 @@ elmFormCreate.component('DragTool', DragTool);
 elmFormCreate.component('DragBox', DragBox);
 elmFormCreate.component('Validate', Validate);
 elmFormCreate.component('Struct', Struct);
+elmFormCreate.component('OptionTextInput', OptionTextInput);
 elmFormCreate.component('HtmlEditor', HtmlEditor);
 elmFormCreate.component('FetchConfig', FetchConfig);
 elmFormCreate.component('FnEditor', FnEditor);
@@ -147,7 +149,7 @@ if (compareVersion(minVersion, formCreate.version) === 1) {
     console.warn('Please use FormCreate version ' + minVersion + ' or greater, see https://github.com/xaboy/form-create.');
 }
 
-FcDesignerMobile.version = '3.4.0';
+FcDesignerMobile.version = '3.5.0';
 
 if (typeof window !== 'undefined') {
     window.FcDesignerMobile = FcDesignerMobile;

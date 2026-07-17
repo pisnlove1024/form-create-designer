@@ -193,10 +193,6 @@ export default defineComponent({
     color: #2E73FF;
 }
 
-._fd-fn-list-dialog .el-dialog__body {
-    padding: 10px 20px;
-}
-
 ._fd-fn-list-con .el-main {
     padding: 0;
 }

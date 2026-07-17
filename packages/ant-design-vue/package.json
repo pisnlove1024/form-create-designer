@@ -1,6 +1,6 @@
 {
     "name": "@form-create/antd-designer",
-    "version": "3.4.0",
+    "version": "3.5.0",
     "description": "AntDesignVue版本Vue低代码可视化表单设计器，可以通过拖拽的方式快速创建表单，提高开发者对表单的开发效率。",
     "unpkg": "./dist/index.umd.js",
     "jsdelivr": "./dist/index.umd.js",
@@ -81,14 +81,15 @@
         "vue": "^3.5"
     },
     "dependencies": {
-        "@form-create/ant-design-vue": "^3.2.33",
-        "@form-create/component-wangeditor": "^3.2.14",
-        "@form-create/utils": "^3.2.31",
+        "@form-create/ant-design-vue": "^3.3.1",
+        "@form-create/component-wangeditor": "^3.3.0",
+        "@form-create/utils": "^3.3.0",
         "ant-design-vue": "~4.2.6",
         "codemirror": "^6.65.7",
         "js-beautify": "^1.15.1",
         "marked": "^17.0.0",
         "signature_pad": "^5.0.10",
+        "sortablejs": "1.14.0",
         "vuedraggable": "4.1.0"
     }
 }

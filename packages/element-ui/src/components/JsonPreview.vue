@@ -9,6 +9,11 @@
                  :class="{active: active==='options'}"
                  @click="active='options'"> {{ t('designer.form') }}
             </div>
+            <div class="_fc-json-preview-down">
+                <el-tooltip effect="dark" :content="t('props.export')" placement="top" :hide-after="0">
+                    <i class="fc-icon icon-download" @click="downloadJson"></i>
+                </el-tooltip>
+            </div>
         </el-header>
         <el-main style="padding: 8px;">
             <StructEditor ref="editor" v-model="value" @blur="handleBlur" @focus="handleFocus" format
@@ -65,11 +70,27 @@ export default defineComponent({
             let str;
             if (this.$refs.editor.save() && (str = designerForm.toJson(this.value)) !== this.oldValue) {
                 if (this.active === 'rule') {
-                    this.designer.setupState.setRule(str);
+                    this.designer.setupState.setRule(this.value ? str : []);
                 } else {
                     this.designer.setupState.setOptions(this.value || {});
                 }
             }
+        },
+        downloadJson() {
+            const data = {
+                rule: this.designer.setupState.getRule(),
+                options: this.designer.setupState.getOptions(),
+            };
+            const str = designerForm.toJson(data);
+            const blob = new Blob([str], {type: 'application/json'});
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `fc-json-${Date.now()}.json`;
+            link.click();
+            setTimeout(() => {
+                URL.revokeObjectURL(url);
+            }, 0);
         }
     },
     mounted() {
@@ -85,6 +106,37 @@ export default defineComponent({
     display: flex;
     width: 100%;
     color: #262626;
+}
+
+._fc-json-preview-down {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    position: absolute;
+    right: 8px;
+    top: 0;
+}
+
+._fc-json-preview .icon-download {
+    width: 24px;
+    height: 24px;
+    border: none;
+    background: transparent;
+    border-radius: 3px;
+    color: #666666;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.15s ease;
+    opacity: 0.8;
+}
+
+._fc-json-preview .icon-download:hover {
+    background: #f5f5f5;
+    color: #262626;
+    opacity: 1;
 }
 
 ._fc-json-preview .CodeMirror {

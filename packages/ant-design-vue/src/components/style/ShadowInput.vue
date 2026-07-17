@@ -1,7 +1,7 @@
 <template>
     <div class="_fd-shadow-input">
         <ConfigItem :label="t('style.shadow.name')">
-            <a-input allowClear v-model:value="value" class="_fd-si-input">
+            <a-input allowClear v-model:value="value" @change="changeValue(value)" @keydown.enter="changeValue(value)" class="_fd-si-input">
                 <template #addonAfter>
                     <a-dropdown>
                         <i class="fc-icon icon-setting"></i>
@@ -16,7 +16,7 @@
                 </template>
             </a-input>
             <template #append>
-                <ShadowContent v-model="value"></ShadowContent>
+                <ShadowContent v-model="value" @change="changeValue(value)"></ShadowContent>
             </template>
         </ConfigItem>
     </div>
@@ -39,10 +39,6 @@ export default defineComponent({
         modelValue() {
             this.value = this.modelValue || '';
         },
-        value(n) {
-            this.$emit('update:modelValue', n);
-            this.$emit('change', n);
-        },
     },
     data() {
         const t = this.designer.setupState.t;
@@ -59,6 +55,8 @@ export default defineComponent({
     methods: {
         changeValue(val) {
             this.value = val;
+            this.$emit('update:modelValue', val);
+            this.$emit('change', val);
         },
     },
     created() {

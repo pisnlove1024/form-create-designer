@@ -77,7 +77,7 @@ export default function field({t}) {
             title: t('form.control'),
             warning: t('form.controlDocument', {doc: '<a target="_blank" href="https://view.form-create.com/control" style="color: inherit;text-decoration: underline;">' + t('form.document') + '</a>'}),
             props: {
-                defaultValue: [],
+                placeholder: '[{ value: "value", rule: ["field1", "field2"] }]',
                 validate(val) {
                     if (!Array.isArray(val)) return false;
                     if (!val.length) return true;

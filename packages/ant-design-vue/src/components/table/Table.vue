@@ -1,6 +1,6 @@
 <template>
     <a-col :span="24">
-        <div class="_fc-table" :class="{'is-mini': mini}">
+        <div class="_fc-table" :class="{ 'is-mini': mini, 'is-table-form': formStyle }">
             <table border="1" cellspacing="0" cellpadding="0" :style="tableColor">
                 <template v-for="(_,pid) in rule.row" :key="pid">
                     <tr>
@@ -29,6 +29,7 @@ export default {
     name: 'FcTable',
     props: {
         mini: Boolean,
+        formStyle: Boolean,
         label: String,
         width: [Number, String],
         border: {
@@ -220,5 +221,31 @@ export default {
 ._fc-table.is-mini .ant-form-item {
     padding: 0;
     margin: 0;
+}
+
+._fc-table.is-table-form .ant-form-item {
+    margin-bottom: 1px !important;
+}
+
+._fc-table.is-table-form .ant-form-item-has-error {
+    margin-bottom: 22px !important;
+}
+
+._fc-table.is-table-form .ant-form-item-label,
+._fc-table.is-table-form .van-field__label {
+    display: none !important;
+}
+
+._fc-table.is-table-form .ant-form-item-control {
+    margin-left: 0 !important;
+    width: 100% !important;
+}
+
+._fc-table.is-table-form .ant-input-number,
+._fc-table.is-table-form .ant-select,
+._fc-table.is-table-form .ant-slider,
+._fc-table.is-table-form .ant-cascader,
+._fc-table.is-table-form .ant-picker {
+    width: 100%;
 }
 </style>

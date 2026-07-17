@@ -1,14 +1,18 @@
 <template>
-    <div class="_fc-table-form" :class="{'_fc-disabled': disabled}">
-        <component :is="Form" :option="options" :rule="rule" :extendOption="true"
-                   :disabled="disabled"
-                   @change="formChange"
-                   v-model:api="fapi"
-                   @emit-event="$emit"></component>
-        <a-button type="link" class="fc-clock" v-if="addable && (!max || max > this.trs.length)"
-                  @click="addRaw(true)" :disabled="disabled"><i class="fc-icon icon-add-circle"
-                                                                style="font-weight: 700;"></i>
-            {{formCreateInject.t('add') || '添加'}}
+    <div class="_fc-table-form" :class="{ '_fc-disabled': disabled, '_fc-undeletable': !deletable }">
+        <component
+            :is="Form"
+            :option="options"
+            :rule="rule"
+            :extendOption="true"
+            :disabled="disabled"
+            @change="formChange"
+            v-model:api="fapi"
+            @emit-event="$emit"
+        ></component>
+        <a-button type="link" class="fc-clock" v-if="addable && (!max || max > this.trs.length)" @click="addRaw(true)" :disabled="disabled"
+        ><i class="fc-icon icon-add-circle" style="font-weight: 700"></i>
+            {{ formCreateInject.t('add') || '添加' }}
         </a-button>
     </div>
 </template>
@@ -28,7 +32,7 @@ export default {
         columns: {
             type: Array,
             required: true,
-            default: () => []
+            default: () => [],
         },
         filterEmptyColumn: {
             type: Boolean,
@@ -44,24 +48,36 @@ export default {
         },
         options: {
             type: Object,
-            default: () => reactive(({
-                submitBtn: false,
-                resetBtn: false,
-            }))
+            default: () =>
+                reactive({
+                    submitBtn: false,
+                    resetBtn: false,
+                }),
         },
         min: Number,
         max: Number,
         disabled: Boolean,
+        showIndex: {
+            type: Boolean,
+            default: true,
+        },
+        beforeRemove: Function,
     },
     watch: {
         modelValue: {
             handler() {
-                this.updateTable()
+                this.updateTable();
             },
-            deep: true
+            deep: true,
         },
-        'formCreateInject.preview': function (n) {
-            this.emptyRule.children[0].props.colspan = this.columns.length + (n ? 1 : 2);
+        'formCreateInject.preview': function () {
+            this.updateEmptyColspan();
+        },
+        deletable() {
+            this.updateEmptyColspan();
+        },
+        showIndex() {
+            this.rebuildTable();
         },
     },
     data() {
@@ -86,37 +102,59 @@ export default {
                         native: true,
                         subRule: true,
                         props: {
-                            colspan: this.columns.length + (this.formCreateInject.preview ? 1 : 2),
+                            colspan: 0,
                         },
-                        children: [this.formCreateInject.t('dataEmpty') || '暂无数据']
-                    }
-                ]
+                        children: [this.formCreateInject.t('dataEmpty') || '暂无数据'],
+                    },
+                ],
             },
         };
     },
     methods: {
+        getColspan() {
+            const visibleCols = this.columns.filter(column => column.hidden !== true).length;
+            let extra = this.formCreateInject.preview || !this.deletable ? 1 : 2;
+            if (this.showIndex === false) {
+                extra -= 1;
+            }
+            return visibleCols + extra;
+        },
+        updateEmptyColspan() {
+            this.emptyRule.children[0].props.colspan = this.getColspan();
+        },
+        rebuildTable() {
+            const oldValue = this.oldValue;
+            this.loadRule();
+            this.updateEmptyColspan();
+            this.trs.splice(0, this.trs.length);
+            this.oldValue = '';
+            this.updateTable();
+            this.oldValue = oldValue;
+        },
         formChange() {
             this.updateValue();
         },
         updateValue() {
-            const value = this.trs.map((tr, idx) => {
-                return {
-                    ...(this.modelValue[idx] || {}),
-                    ...this.fapi.getChildrenFormData(tr)
-                }
-            }).filter(v => {
-                if (!this.filterEmptyColumn) {
-                    return true;
-                }
-                if (v === undefined || v === null) {
-                    return false;
-                }
-                let flag = false;
-                Object.keys(v).forEach(k => {
-                    flag = flag || (v[k] !== undefined && v[k] !== '' && v[k] !== null)
+            const value = this.trs
+                .map((tr, idx) => {
+                    return {
+                        ...(this.modelValue[idx] || {}),
+                        ...this.fapi.getChildrenFormData(tr),
+                    };
                 })
-                return flag;
-            });
+                .filter(v => {
+                    if (!this.filterEmptyColumn) {
+                        return true;
+                    }
+                    if (v === undefined || v === null) {
+                        return false;
+                    }
+                    let flag = false;
+                    Object.keys(v).forEach(k => {
+                        flag = flag || (v[k] !== undefined && v[k] !== '' && v[k] !== null);
+                    });
+                    return flag;
+                });
             const str = JSON.stringify(value);
             if (str !== this.oldValue) {
                 this.oldValue = str;
@@ -159,9 +197,15 @@ export default {
                 this.trs.splice(0, 1);
             }
         },
-        delRaw(idx) {
+        async delRaw(idx) {
             if (this.disabled || !this.deletable || (this.min > 0 && this.trs.length <= this.min)) {
                 return;
+            }
+            if (this.beforeRemove) {
+                const result = await this.beforeRemove({index: idx, row: this.modelValue[idx] || {}});
+                if (result === false) {
+                    return;
+                }
             }
             this.trs.splice(idx, 1);
             this.updateValue();
@@ -189,48 +233,56 @@ export default {
         },
         updateRaw(tr) {
             const idx = this.trs.indexOf(tr);
-            tr.children[0].props.innerText = idx + 1;
+            if (this.showIndex !== false) {
+                tr.children[0].props.innerText = idx + 1;
+            }
             tr.children[tr.children.length - 1].children[0].props.onClick = () => {
                 this.delRaw(idx);
             };
         },
         loadRule() {
-            const header = [{
-                type: 'th',
-                native: true,
-                class: '_fc-tf-head-idx',
-            }];
-            let body = [{
-                type: 'td',
-                class: '_fc-tf-idx',
-                native: true,
-                props: {
-                    innerText: '0'
-                }
-            }];
-            this.columns.forEach((column) => {
+            const header = [];
+            const body = [];
+            if (this.showIndex !== false) {
                 header.push({
                     type: 'th',
                     native: true,
-                    style: {...column.style||{}, textAlign: column.align || 'center'},
-                    class: column.required ? '_fc-tf-head-required' : '',
-                    props: {
-                        innerText: column.label || ''
-                    }
+                    class: '_fc-tf-head-idx',
                 });
                 body.push({
                     type: 'td',
+                    class: '_fc-tf-idx',
                     native: true,
-                    children: [...(column.rule || [])]
+                    props: {
+                        innerText: '0',
+                    },
                 });
+            }
+            this.columns.forEach(column => {
+                if (column.hidden !== true) {
+                    header.push({
+                        type: 'th',
+                        native: true,
+                        style: {...(column.style || {}), textAlign: column.align || 'center'},
+                        class: column.required ? '_fc-tf-head-required' : '',
+                        props: {
+                            innerText: column.label || '',
+                        },
+                    });
+                    body.push({
+                        type: 'td',
+                        native: true,
+                        children: [...(column.rule || [])],
+                    });
+                }
             });
             header.push({
                 type: 'th',
                 native: true,
                 class: '_fc-tf-edit fc-clock',
                 props: {
-                    innerText: this.formCreateInject.t('operation') || '操作'
-                }
+                    innerText: this.formCreateInject.t('operation') || '操作',
+                },
             });
             body.push({
                 type: 'td',
@@ -242,7 +294,7 @@ export default {
                         native: true,
                         class: 'fc-icon icon-delete',
                         props: {},
-                    }
+                    },
                 ],
             });
             this.copyTrs = this.formCreateInject.form.toJson([
@@ -250,8 +302,8 @@ export default {
                     type: 'tr',
                     native: true,
                     subRule: true,
-                    children: body
-                }
+                    children: body,
+                },
             ]);
             this.rule = [
                 {
@@ -271,51 +323,59 @@ export default {
                                 {
                                     type: 'tr',
                                     native: true,
-                                    children: header
-                                }
-                            ]
+                                    children: header,
+                                },
+                            ],
                         },
                         {
                             type: 'tbody',
                             native: true,
-                            children: this.trs
-                        }
-                    ]
-                }
-            ]
+                            children: this.trs,
+                        },
+                    ],
+                },
+            ];
         },
     },
     created() {
         this.loadRule();
+        this.updateEmptyColspan();
     },
     mounted() {
         this.updateTable();
-    }
+    },
 };
 </script>
 
 <style>
 ._fc-table-form {
-    overflow: auto;
+    width: 100%;
     color: #666666;
+}
+._fc-table-form .form-create,
+._fc-table-form .form-create-m {
+    overflow: auto;
 }
 
 ._fc-table-form .form-create .ant-form-item {
     margin-bottom: 1px !important;
 }
 
-._fc-table-form .ant-form-item-label, ._fc-table-form .van-field__label {
+._fc-table-form .ant-form-item-label,
+._fc-table-form .van-field__label {
     display: none !important;
 }
 
-._fc-tf-head-idx, ._fc-tf-idx {
+._fc-tf-head-idx,
+._fc-tf-idx {
     width: 40px;
     min-width: 40px;
     font-weight: 500;
     text-align: center;
 }
 
-._fc-tf-edit, ._fc-tf-btn {
+._fc-tf-edit,
+._fc-tf-btn {
     width: 70px;
     min-width: 70px;
     text-align: center;
@@ -331,7 +391,8 @@ export default {
     padding: 2px;
 }
 
-._fc-table-form._fc-disabled ._fc-tf-btn .fc-icon, ._fc-table-form._fc-disabled > .ant-btn {
+._fc-table-form._fc-disabled ._fc-tf-btn .fc-icon,
+._fc-table-form._fc-disabled > .ant-btn {
     cursor: not-allowed;
 }
 
@@ -340,13 +401,13 @@ export default {
     height: 100%;
     overflow: hidden;
     table-layout: fixed;
-    border: 1px solid #EBEEF5;
+    border: 1px solid #ebeef5;
     border-bottom: 0 none;
 }
 
 ._fc-table-form ._fc-tf-table > thead > tr > th {
     border: 0 none;
-    border-bottom: 1px solid #EBEEF5;
+    border-bottom: 1px solid #ebeef5;
     height: 40px;
     font-weight: 500;
     padding: 0 5px;
@@ -354,7 +415,7 @@ export default {
 }
 
 ._fc-table-form ._fc-tf-table > thead > tr > th + th {
-    border-left: 1px solid #EBEEF5;
+    border-left: 1px solid #ebeef5;
 }
 
 ._fc-table-form tr {
@@ -376,14 +437,18 @@ export default {
     /*white-space: nowrap;*/
     overflow: hidden;
     border: 0 none;
-    border-bottom: 1px solid #EBEEF5;
+    border-bottom: 1px solid #ebeef5;
 }
 
 ._fc-table-form td + td {
-    border-left: 1px solid #EBEEF5;
+    border-left: 1px solid #ebeef5;
 }
 
-._fc-tf-table .ant-input-number, ._fc-tf-table .ant-select, ._fc-tf-table .ant-slider, ._fc-tf-table .ant-cascader, ._fc-tf-table .ant-picker {
+._fc-tf-table .ant-input-number,
+._fc-tf-table .ant-select,
+._fc-tf-table .ant-slider,
+._fc-tf-table .ant-cascader,
+._fc-tf-table .ant-picker {
     width: 100%;
 }
 
@@ -391,5 +456,10 @@ export default {
     content: '*';
     color: #f56c6c;
     margin-right: 4px;
+}
+
+._fc-undeletable ._fc-tf-edit,
+._fc-undeletable ._fc-tf-btn {
+    display: none !important;
 }
 </style>
