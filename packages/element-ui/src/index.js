@@ -228,6 +228,8 @@ export {
 };
 
 export {default as FcComponentPreview} from './components/FcComponentPreview.vue';
+export {default as FcCodePreview} from './components/FcCodePreview.vue';
+export {default as FcYamlTreeEditor} from './components/FcYamlTreeEditor.vue';
 export * from './runtime/index';
 export {
     componentDragRules,

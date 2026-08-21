@@ -92,6 +92,41 @@ CG 扩展组件的运行时注册、能力清单、统一值绑定、预览、JS
 默认设计器 example 已使用最新组件规则；在 example 地址后追加 `?runtime-verification`，可独立验证真实组件预览、
 统一值绑定契约、第三方能力注册和 `fcDataTable` 行操作生命周期。
 
+YAML 组件示例可通过 `?yaml-tree-editor` 打开，源码见
+[examples/YamlTreeEditorDemo.vue](./examples/YamlTreeEditorDemo.vue)。默认 `?runtime-verification` 页面也会验证
+Schema、分栏模式和 `node-change` 事件。`fcYamlTreeEditor` 提供树形编辑、YAML 源码和分栏三种视图，
+可选传入 JSON Schema 约束字段类型、必填项、枚举和值范围；需要完整 YAML 语法时，可配合 YAML 模式的
+`fcCodePreview` 使用。
+
+```vue
+<script setup>
+import {ref} from 'vue';
+import {FcCodePreview, FcYamlTreeEditor} from '@cg-devcenter/form-create.designer';
+
+const yamlValue = ref('service:\n  name: pmt\n');
+const sourceYaml = ref(yamlValue.value);
+const error = ref('');
+const schema = {type: 'object', required: ['service']};
+</script>
+
+<template>
+<FcYamlTreeEditor
+    v-model="yamlValue"
+    view-mode="split"
+    :schema="schema"
+    @validation-error="error = $event"
+/>
+<FcCodePreview
+    v-model="sourceYaml"
+    language="yaml"
+    :editable="true"
+    :formattable="true"
+/>
+</template>
+```
+
+推荐将 `sourceYaml` 和 `yamlValue` 作为两个草稿，通过“应用源码到树”和“同步树结果到源码”按钮显式同步，避免非法或未完成的 YAML 直接覆盖结构化状态。完整的属性、事件、Schema 支持范围和设计器数据源说明见 [COMPONENT-RUNTIME.md](./COMPONENT-RUNTIME.md) 的 YAML 章节。
+
 ## 联系
 
 ![http://static.form-create.com/file/img/support.jpg](http://static.form-create.com/file/img/support.jpg)

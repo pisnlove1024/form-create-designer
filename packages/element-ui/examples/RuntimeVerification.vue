@@ -49,6 +49,20 @@
                     <h3>third-party registration: fcExampleMetric</h3>
                     <FcComponentPreview :rule="metricPreviewRule" :form-data="previewFormData"/>
                 </article>
+                <article class="preview-card preview-card--yaml" data-testid="yaml-tree-editor">
+                    <h3>hybrid binding: fcYamlTreeEditor</h3>
+                    <p class="preview-card__hint">通过组件注册表验证 modelValue、props.yaml fallback、分栏模式和 Schema 校验；最近事件：{{ yamlNodeEvent || '暂无' }}</p>
+                    <FcComponentPreview
+                        :rule="yamlPreviewRule"
+                        :form-data="previewFormData"
+                        @update:model-value="previewFormData.previewYaml = $event"
+                        @node-change="recordYamlNodeChange"
+                    />
+                    <details class="yaml-output">
+                        <summary>查看 v-model 输出</summary>
+                        <pre>{{ previewFormData.previewYaml }}</pre>
+                    </details>
+                </article>
             </div>
             <el-button size="small" @click="updatePreviewValue">Update bound model values</el-button>
             <pre data-testid="codec-state">round-trip type: {{ codecRoundTripType }}\n{{ codecJson }}</pre>
@@ -144,6 +158,33 @@ const messages = {
     'props.ok': 'OK',
 };
 
+const yamlSchema = {
+    type: 'object',
+    required: ['service'],
+    properties: {
+        service: {
+            type: 'object',
+            required: ['name', 'replicas', 'enabled', 'env'],
+            properties: {
+                name: {type: 'string', minLength: 1},
+                replicas: {type: 'integer', minimum: 1},
+                enabled: {type: 'boolean'},
+                env: {
+                    type: 'array',
+                    items: {
+                        type: 'object',
+                        required: ['name', 'value'],
+                        properties: {
+                            name: {type: 'string', minLength: 1},
+                            value: {type: ['string', 'object']},
+                        },
+                    },
+                },
+            },
+        },
+    },
+};
+
 export default defineComponent({
     name: 'RuntimeVerification',
     components: {
@@ -164,6 +205,7 @@ export default defineComponent({
     data() {
         return {
             definitions: componentDefinitions,
+            yamlSchema,
             previewRule: {
                 type: 'fcCodePreview',
                 field: 'previewCode',
@@ -179,6 +221,14 @@ export default defineComponent({
             },
             previewFormData: {
                 previewCode: JSON.stringify({source: 'modelValue', updated: 0}, null, 2),
+                previewYaml: `service:
+  name: pmt
+  replicas: 3
+  enabled: true
+  env:
+    - name: LOG_LEVEL
+      value: info
+`,
                 previewChart: {
                     category: ['A', 'B', 'C'],
                     series: [{name: 'modelValue', data: [3, 6, 9]}],
@@ -202,6 +252,18 @@ export default defineComponent({
             titlePreviewRule: {
                 type: 'fcTitle',
                 props: {title: 'Registered FC title preview', size: 'h3'},
+            },
+            yamlPreviewRule: {
+                type: 'fcYamlTreeEditor',
+                field: 'previewYaml',
+                props: {
+                    yaml: `service:
+  name: legacy-fallback
+`,
+                    height: '520px',
+                    viewMode: 'split',
+                    schema: yamlSchema,
+                },
             },
             chartPreviewRule: {
                 type: 'fcChart',
@@ -229,6 +291,7 @@ export default defineComponent({
                 field: 'metric',
                 props: {suffix: '%'},
             },
+            yamlNodeEvent: '',
             rows: [{id: 1, name: 'Alpha'}, {id: 2, name: 'Beta'}],
             legacyRows: [{id: 99, name: 'Legacy fallback (hidden while modelValue exists)'}],
             useModelRows: true,
@@ -300,6 +363,9 @@ export default defineComponent({
         record(name, payload) {
             this.events.push(`${name}:${payload.action.id}:${payload.row.id}`);
         },
+        recordYamlNodeChange(event) {
+            this.yamlNodeEvent = `${event.action}:${event.nodeId}`;
+        },
     },
 });
 </script>
@@ -363,6 +429,25 @@ export default defineComponent({
 .preview-card h3 {
     margin: 0 0 12px;
     font-size: 15px;
+}
+
+.preview-card--yaml {
+    grid-column: 1 / -1;
+}
+
+.preview-card__hint {
+    margin: -4px 0 12px;
+    color: #606266;
+    font-size: 13px;
+}
+
+.yaml-output {
+    margin-top: 12px;
+}
+
+.yaml-output summary {
+    cursor: pointer;
+    color: #409eff;
 }
 
 .verification-controls {

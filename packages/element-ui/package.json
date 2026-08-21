@@ -95,6 +95,7 @@
         "marked": "^17.0.0",
         "signature_pad": "^5.0.10",
         "sortablejs": "1.14.0",
-        "vuedraggable": "4.1.0"
+        "vuedraggable": "4.1.0",
+        "yaml": "^2.8.1"
     }
 }

@@ -12,6 +12,7 @@ const defaultCodes = {
     python: 'def hello():\n    print("Hello, World!")\n\nif __name__ == "__main__":\n    hello()',
     java: 'public class Hello {\n    public static void main(String[] args) {\n        System.out.println("Hello, World!");\n    }\n}',
     sql: 'SELECT id, name, email\nFROM users\nWHERE status = 1\nORDER BY name ASC\nLIMIT 10;',
+    yaml: 'service:\n  name: pmt-api\n  replicas: 3\n  enabled: true',
     plaintext: 'Hello, World!',
 };
 
@@ -88,6 +89,7 @@ export default {
                     {label: 'python', value: 'python'},
                     {label: 'java', value: 'java'},
                     {label: 'sql', value: 'sql'},
+                    {label: 'yaml', value: 'yaml'},
                     {label: 'plaintext', value: 'plaintext'},
                 ], 'com.fcCodePreview.languages')
             },

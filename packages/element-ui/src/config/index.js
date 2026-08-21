@@ -43,6 +43,7 @@ import signaturePad from './rule/signaturePad';
 import title from './rule/title';
 import chart from './rule/chart';
 import codePreview from './rule/codePreview';
+import yamlTreeEditor from './rule/yamlTreeEditor';
 import dialog from './rule/dialog';
 import drawer from './rule/drawer';
 import dataTable from './rule/dataTable';
@@ -50,7 +51,7 @@ import dataTable from './rule/dataTable';
 const ruleList = [
     input, textarea, password, number, radio, checkbox, select, _switch, rate, time, timeRange, slider, date, dateRange, color, cascader, upload, transfer, tree, treeSelect, editor, signaturePad,
     group, subForm, tableForm, tableFormColumn,
-    alert, button, text, title, html, divider, tag, image, chart, codePreview, dataTable,
+    alert, button, text, title, html, divider, tag, image, chart, codePreview, yamlTreeEditor, dataTable,
     row, table, tabs, space, card, collapse, dialog, drawer,
     col, tabPane, collapseItem,
 ];

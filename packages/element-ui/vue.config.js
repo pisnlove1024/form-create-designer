@@ -14,7 +14,10 @@ module.exports = {
             filename: 'index.html'
         }
     },
-    transpileDependencies: ['marked'],
+    // `yaml` ships modern syntax (for example optional chaining) in its browser
+    // build. The example app still runs on webpack 4, so it must go through the
+    // same Babel pass as the app sources.
+    transpileDependencies: ['marked', 'yaml'],
     configureWebpack: {
         module: {
             rules: [

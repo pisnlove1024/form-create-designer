@@ -25,7 +25,9 @@ import 'codemirror/mode/htmlmixed/htmlmixed';
 import 'codemirror/mode/python/python';
 import 'codemirror/mode/clike/clike';
 import 'codemirror/mode/sql/sql';
+import 'codemirror/mode/yaml/yaml';
 import beautify from 'js-beautify';
+import {parse as parseYaml, stringify as stringifyYaml} from 'yaml';
 
 const languageModeMap = {
     javascript: 'javascript',
@@ -35,10 +37,11 @@ const languageModeMap = {
     python: 'python',
     java: 'text/x-java',
     sql: 'sql',
+    yaml: 'yaml',
     plaintext: null,
 };
 
-const formattableLanguages = ['javascript', 'html', 'css', 'json'];
+const formattableLanguages = ['javascript', 'html', 'css', 'json', 'yaml'];
 
 function resolveData(data) {
     if (typeof data === 'function') return data.__json || data.toString();
@@ -50,6 +53,7 @@ function normalizeCode(data, language) {
     if (data == null || data === '') return '';
     if (typeof data === 'string') return data;
     try {
+        if (language === 'yaml') return stringifyYaml(data, {indent: 2, lineWidth: 0});
         return JSON.stringify(data, null, 2);
     } catch (e) {
         return '';
@@ -59,16 +63,18 @@ function normalizeCode(data, language) {
 function formatByLanguage(code, language) {
     try {
         switch (language) {
-            case 'javascript':
-                return beautify.js(code, {indent_size: 2});
-            case 'html':
-                return beautify.html(code, {indent_size: 2});
-            case 'css':
-                return beautify.css(code, {indent_size: 2});
-            case 'json':
-                return JSON.stringify(JSON.parse(code), null, 2);
-            default:
-                return code;
+        case 'javascript':
+            return beautify.js(code, {indent_size: 2});
+        case 'html':
+            return beautify.html(code, {indent_size: 2});
+        case 'css':
+            return beautify.css(code, {indent_size: 2});
+        case 'json':
+            return JSON.stringify(JSON.parse(code), null, 2);
+        case 'yaml':
+            return stringifyYaml(parseYaml(code), {indent: 2, lineWidth: 0});
+        default:
+            return code;
         }
     } catch (e) {
         return code;
@@ -103,7 +109,7 @@ export default defineComponent({
     name: 'FcCodePreview',
     emits: ['update:modelValue', 'change'],
     props: {
-        modelValue: [String, Object, Function],
+        modelValue: [String, Number, Boolean, Object, Array, Function],
         chartData: {
             default: ''
         },

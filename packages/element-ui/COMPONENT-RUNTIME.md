@@ -78,8 +78,75 @@ const parsed = componentCodec.deserialize(json, {parsePlainFunctions: false});
 - 常规输入组件使用 `modelValue`。
 - `fcChart` 优先使用 `modelValue`，为空时回退 `props.chartData`。
 - `fcCodePreview` 优先使用 `modelValue`，为空时回退 `props.chartData`。
+- `fcCodePreview` 支持 `yaml` 语言模式和 YAML 格式化，可作为 YAML 源码视图的轻量代码编辑器。
+- `fcYamlTreeEditor` 以 YAML 字符串作为 `modelValue`，为空时回退 `props.yaml`；支持 `viewMode: 'tree' | 'source' | 'split'`。
+  树形编辑结果会规范化为单文档的 Map、List 和 Scalar YAML，不保留注释、锚点、别名和原始排版；源码模式可作为完整 YAML 语法的逃生通道，应用源码时仍会先校验再同步到树。
+- `fcYamlTreeEditor` 的 `schema` 支持 JSON Schema 的常用子集：`type`、`properties`、`items`、`required`、`enum`、`const`、`additionalProperties`、长度/数值范围；不传 schema 时保持自由 Map/List/Scalar 编辑。
+- 设计器规则支持静态、接口和全局数据源，动态数据会写入 `props.yaml`；组件能力清单声明了 `remoteData`。
 - `fcDataTable` 在 `modelValue` 为数组时优先使用它，否则回退 `props.data`。
 - 容器和布局组件使用 `children`，不伪装成数据字段。
+
+## YAML 结构化编辑与源码编辑
+
+`fcYamlTreeEditor` 和 `fcCodePreview` 面向同一份 YAML 时建议分工使用：树编辑器负责字段结构、类型和 Schema 约束，CodePreview 负责完整 YAML 语法、注释和暂未被树编辑器建模的内容。专用示例位于 `examples/YamlTreeEditorDemo.vue`，浏览器入口为 `/?yaml-tree-editor`。
+
+`FcCodePreview` 和 `FcYamlTreeEditor` 已作为包的 named exports。下面是 Vue 3 `<script setup>` 的直用方式；如果通过 form-create 规则渲染，则只需配置对应的组件规则即可。
+
+一个安全的同步方式是让源码和树各自持有草稿，点击按钮后再把源码应用到树：
+
+```vue
+<script setup>
+import {ref} from 'vue';
+import {FcCodePreview, FcYamlTreeEditor} from '@cg-devcenter/form-create.designer';
+
+const yamlValue = ref('service:\n  name: pmt\n');
+const sourceYaml = ref(yamlValue.value);
+const error = ref('');
+const schema = {type: 'object', required: ['service']};
+</script>
+
+<template>
+    <FcYamlTreeEditor
+        v-model="yamlValue"
+        view-mode="split"
+        :schema="schema"
+        @parse-error="error = $event"
+        @validation-error="error = $event"
+    />
+    <FcCodePreview
+        v-model="sourceYaml"
+        language="yaml"
+        :editable="true"
+        :formattable="true"
+    />
+    <button @click="yamlValue = sourceYaml">应用源码到树</button>
+    <button @click="sourceYaml = yamlValue">同步树结果到源码</button>
+</template>
+```
+
+`fcYamlTreeEditor` 的主要属性和事件：
+
+| 属性/事件 | 说明 |
+| --- | --- |
+| `modelValue` | 优先级最高的 YAML 字符串；也接受对象或数组并转换为 YAML。 |
+| `yaml` | 没有 `modelValue` 时使用的回退数据，设计器规则会写入这里。 |
+| `viewMode` | `tree` 树形、`source` 源码、`split` 分栏。 |
+| `schema` | JSON Schema 对象或 JSON 字符串，限制节点类型、字段和取值。 |
+| `indent` / `readonly` / `disabled` | 控制输出缩进和编辑状态。 |
+| `change` | 树编辑成功后返回规范化 YAML 字符串。 |
+| `parse-error` | 源码不是单文档或包含暂不支持的 YAML 结构时触发。 |
+| `validation-error` | 树内容不满足基础校验或 Schema 时触发。 |
+| `node-change` | 返回 `{action, nodeId, yaml}`，可用于审计或联动。 |
+
+组件实例还提供 `getYaml()`、`setYaml(value)`、`applySource()` 和 `validate()` 方法。
+
+Schema 目前支持 JSON Schema 的常用子集：`type`（object、array、string、number、integer、boolean、null）、`properties`、`items`、`required`、`additionalProperties`、`enum`、`const`、`minLength`、`maxLength`、`pattern`、`minimum`、`maximum`、`minItems`、`maxItems`、`minProperties` 和 `maxProperties`。不传 Schema 时，组件保持自由的 Map/List/Scalar 编辑；不支持 `oneOf`、`allOf`、`$ref` 等完整 JSON Schema 组合能力。
+
+树模式会将内容规范化为单文档 YAML，不保留注释、原始排版、锚点和别名。源码模式可以继续编辑完整 YAML，但应用回树时会再次执行单文档和树模型校验。
+
+设计器中的数据来源配置如下：静态内容写入 `props.yaml`，接口数据通过 `formCreateEffect>fetch` 写入 `props.yaml`，全局数据通过 `formCreateEffect>globalData` 写入 `props.yaml`。因此同一组件既可以由低代码配置初始结构，也可以由运行时接口加载 YAML。
+
+`fcCodePreview` 使用 `language="yaml"` 开启 YAML 高亮，`formattable` 开启 YAML 解析和格式化；它不执行 Schema 校验，适合作为 YAML 树编辑器的自由源码补充。
 
 `fcChart` 的示例数据只由设计器拖拽规则提供；组件本体没有数据时显示空态，不会在运行时伪造样例。
 

@@ -4,6 +4,7 @@ import 'element-plus/dist/index.css';
 import formCreate from '@form-create/element-ui';
 import App from './App.vue';
 import RuntimeVerification from './RuntimeVerification.vue';
+import YamlTreeEditorDemo from './YamlTreeEditorDemo.vue';
 import FcDesigner, {registerComponent} from '../src/index';
 
 const ExampleMetric = defineComponent({
@@ -31,7 +32,11 @@ registerComponent({
     },
 });
 
-const app = createApp(new URLSearchParams(window.location.search).has('runtime-verification') ? RuntimeVerification : App);
+const search = new URLSearchParams(window.location.search);
+const rootComponent = search.has('yaml-tree-editor')
+    ? YamlTreeEditorDemo
+    : (search.has('runtime-verification') ? RuntimeVerification : App);
+const app = createApp(rootComponent);
 
 app.use(ELEMENT);
 app.use(formCreate);

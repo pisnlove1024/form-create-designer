@@ -12,10 +12,11 @@ import table from '../config/rule/table';
 import chart from '../config/rule/chart';
 import dataTable from '../config/rule/dataTable';
 import codePreview from '../config/rule/codePreview';
+import yamlTreeEditor from '../config/rule/yamlTreeEditor';
 import dialog from '../config/rule/dialog';
 import drawer from '../config/rule/drawer';
 
-const builtinDragRules = Object.freeze([editor, title, signaturePad, tableForm, table, chart, dataTable, codePreview, dialog, drawer]);
+const builtinDragRules = Object.freeze([editor, title, signaturePad, tableForm, table, chart, dataTable, codePreview, yamlTreeEditor, dialog, drawer]);
 const builtinDragRuleMap = new Map(builtinDragRules.map(rule => [rule.name.toLowerCase(), rule]));
 const extensionDragRuleMap = new Map();
 const extensionPreviewMap = new Map();

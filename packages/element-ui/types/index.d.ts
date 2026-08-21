@@ -645,6 +645,8 @@ export declare const FcComponentPreview: import("vue").DefineComponent<{
     componentProps?: Record<string, unknown>;
     mode?: 'default' | 'tableCell' | string;
 }>;
+export declare const FcCodePreview: Component;
+export declare const FcYamlTreeEditor: Component;
 
 //设计器组件
 export declare const FcDesigner: import("vue").DefineComponent<{

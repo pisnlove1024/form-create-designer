@@ -6,6 +6,7 @@ import FcTable from '../components/table/Table.vue';
 import FcChart from '../components/FcChart.vue';
 import FcDataTable from '../components/FcDataTable.vue';
 import FcCodePreview from '../components/FcCodePreview.vue';
+import FcYamlTreeEditor from '../components/FcYamlTreeEditor.vue';
 import FcDialog from '../components/FcDialog.vue';
 import FcDrawer from '../components/FcDrawer.vue';
 
@@ -50,6 +51,7 @@ const builtinDefinitions = Object.freeze([
         },
     },
     {type: 'fcCodePreview', category: 'display', component: FcCodePreview, binding: {kind: 'hybrid', prop: 'chartData', modelProp: 'modelValue'}, capabilities: {input: true, remoteData: true, preview: true, tableCell: true}},
+    {type: 'fcYamlTreeEditor', category: 'composite', component: FcYamlTreeEditor, binding: {kind: 'hybrid', prop: 'yaml', modelProp: 'modelValue'}, capabilities: {input: true, remoteData: true, preview: true}},
     {type: 'fcDialog', category: 'overlay', component: FcDialog, binding: {kind: 'children'}, capabilities: {container: true, overlay: 'dialog', preview: false}},
     {type: 'fcDrawer', category: 'overlay', component: FcDrawer, binding: {kind: 'children'}, capabilities: {container: true, overlay: 'drawer', preview: false}},
 ].map(freezeDefinition));
