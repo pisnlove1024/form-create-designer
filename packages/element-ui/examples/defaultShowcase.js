@@ -74,6 +74,9 @@ const SHOWCASE_LANGUAGE = {
         liveScript: '可编辑脚本',
         liveScriptName: 'JavaScript 在线编辑',
         liveScriptDesc: '绑定 modelValue，编辑时触发 change 并更新展示内容。',
+        yamlTreeEditor: 'YAML 树编辑器',
+        yamlTreeEditorName: 'YAML 服务配置',
+        yamlTreeEditorDesc: '树形编辑器适合受 Schema 约束的结构化修改，源码面板保留完整 YAML 编辑能力。',
         codeBestPractice: '数据、事件、文案都放在可配置入口',
         summaryCard: '展示组件组合',
         summaryText: '文字组件用于静态说明；HTML 组件用于富文本片段；按钮可绑定全局方法。',
@@ -271,6 +274,9 @@ const SHOWCASE_LANGUAGE = {
         liveScript: 'Editable Script',
         liveScriptName: 'JavaScript Live Editor',
         liveScriptDesc: 'Bound to modelValue; edits emit change and update the preview immediately.',
+        yamlTreeEditor: 'YAML Tree Editor',
+        yamlTreeEditorName: 'YAML Service Config',
+        yamlTreeEditorDesc: 'Use the tree for schema-constrained edits while keeping the full YAML source available beside it.',
         codeBestPractice: 'Keep data, events, and copy in configurable entries',
         summaryCard: 'Display Component Set',
         summaryText: 'Text is for static copy; HTML is for rich snippets; buttons can bind global methods.',
@@ -762,6 +768,7 @@ const getCustomEvents = (t = createTranslator('zh-cn')) => {
         'onCityChange',
         'onRemoteUserChange',
         'onRemoteTodosChange',
+        'onYamlChange',
         'onPermissionCheck',
         'onProjectAdd',
         'onProjectDelete',
@@ -832,6 +839,7 @@ const getCustomEvents = (t = createTranslator('zh-cn')) => {
         onCityChange: wrapFn('function onCityChange(data){ console.log("[城市变化]", data); }'),
         onRemoteUserChange: wrapFn('function onRemoteUserChange(data){ console.log("[远程用户变化]", data); }'),
         onRemoteTodosChange: wrapFn('function onRemoteTodosChange(data){ console.log("[远程待办变化]", data); }'),
+        onYamlChange: wrapFn('function onYamlChange(data){ console.log("[YAML变化]", data); }'),
         onPermissionCheck: wrapFn('function onPermissionCheck(data){ console.log("[权限树勾选]", data); }'),
         onProjectAdd: wrapFn('function onProjectAdd(data){ console.log("[项目新增]", data); }'),
         onProjectDelete: wrapFn('function onProjectDelete(data){ console.log("[项目删除]", data); }'),
@@ -882,6 +890,42 @@ const makeCodeSnippet = (t) => JSON.stringify({
 }, null, 2);
 
 const liveScript = 'function handlePreviewChange(code) {\n  console.log("Code changed:", code);\n  return code.length;\n}';
+
+const YAML_TREE_EXAMPLE = `service:
+  name: demo-service
+  replicas: 3
+  enabled: true
+  env:
+    - name: LOG_LEVEL
+      value: info
+`;
+
+const YAML_TREE_SCHEMA = {
+    type: 'object',
+    required: ['service'],
+    properties: {
+        service: {
+            type: 'object',
+            required: ['name', 'replicas', 'enabled', 'env'],
+            properties: {
+                name: {type: 'string', minLength: 1},
+                replicas: {type: 'integer', minimum: 1},
+                enabled: {type: 'boolean'},
+                env: {
+                    type: 'array',
+                    items: {
+                        type: 'object',
+                        required: ['name', 'value'],
+                        properties: {
+                            name: {type: 'string', minLength: 1},
+                            value: {type: ['string', 'object']},
+                        },
+                    },
+                },
+            },
+        },
+    },
+};
 
 const makePracticeCard = (title, items) => {
     return '<section style="border:1px solid #e5e7eb;border-radius:8px;padding:14px 16px;background:#fff;">' +
@@ -1238,6 +1282,33 @@ function codeChartTab(t) {
                 },
                 effect: {fetch: ''},
                 style: {width: '100%', height: '400px'},
+            },
+            {
+                type: 'fcYamlTreeEditor',
+                _fc_drag_tag: 'fcYamlTreeEditor',
+                _fc_id: 'show_yaml_tree_editor',
+                field: 'yamlTreeConfig',
+                title: t('yamlTreeEditor'),
+                info: t('yamlTreeEditorDesc'),
+                value: YAML_TREE_EXAMPLE,
+                props: {
+                    yaml: YAML_TREE_EXAMPLE,
+                    schema: clone(YAML_TREE_SCHEMA),
+                    title: t('yamlTreeEditorName'),
+                    height: '420px',
+                    indent: 2,
+                    readonly: false,
+                    disabled: false,
+                    defaultExpandAll: true,
+                    showHeader: true,
+                    showFormatHint: true,
+                    viewMode: 'split',
+                },
+                effect: {fetch: ''},
+                on: {
+                    change: globalEventCall('onYamlChange', '{field: "yamlTreeConfig", value: $inject.args[0]}'),
+                },
+                style: {width: '100%', height: '420px'},
             },
             {
                 type: 'fcCodePreview',
